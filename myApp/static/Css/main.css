@@ -1,0 +1,24 @@
+body{
+    background-color: #202020;
+    color: aqua;
+}
+.navbar{
+    background-color:#404040 ;
+    color: white;
+    padding: 5px 10px;
+}
+.navbar ul{
+   display: flex;
+   justify-content: space-between; 
+}
+.navbar ul li{
+    list-style:none;
+}
+.navbar ul li a{
+    color:white;
+    text-decoration: none;
+}
+.navbar ul li a:hover{
+    color:rgb(115, 74, 237);
+    text-decoration: none;
+}
