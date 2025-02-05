@@ -1,0 +1,35 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<h1>Carga de Excel</h1>
+<form method="post" enctype="multipart/form-data" id="upload-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <!-- Botón para subir el archivo -->
+    <button type="submit" id="upload-btn">Subir archivo</button>
+</form>
+
+{% if preview_data %}
+    <h2>Previsualización del archivo Excel</h2>
+    <div class="table-responsive">
+        {{ preview_data|safe }}
+    </div>
+    <form method="post" action="{% url 'confirmar_carga' %}">
+        {% csrf_token %}
+        <input type="hidden" name="option" value="{{ form.option.value }}">
+        <button type="submit">Confirmar carga</button>
+    </form>
+{% endif %}
+
+{% if messages %}
+    <div class="alert alert-danger">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+{% endblock %}
+{% endblock content %}

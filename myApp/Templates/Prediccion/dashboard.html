@@ -1,0 +1,21 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="nombreSelect">Selecciona un producto:</label>
+        <select id="nombreSelect" name="nombre" onchange="this.form.submit()">
+            <option value="">-- Selecciona --</option>
+            {% for nombre in nombres %}
+                <option value="{{ nombre }}" {% if nombre == request.POST.nombre %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if datos %}
+        <canvas id="graficaPrecios"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
+    {% endif %}
+    {% endblock content %}
