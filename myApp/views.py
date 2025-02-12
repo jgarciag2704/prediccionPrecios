@@ -22,18 +22,23 @@ def about(request):
         'username':username
     })
 
+    
+    
 def dashboard(request):
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
-    datos = None
+    precios = []
 
-    if request.method == "POST":
-        nombre_seleccionado = request.POST.get("nombre")
-        datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).order_by('Fecha')
+    if request.method == 'POST':
+        nombre_seleccionado = request.POST.get('Nombre')
+        if nombre_seleccionado:
+            precios = historicoPrecios.objects.filter(nombre=nombre_seleccionado).values('fecha', 'precioPromedio')
 
-    return render(request, 'Prediccion/dashboard.html', {
+    context = {
+        'title': 'Histórico de Precios',
         'nombres': nombres,
-        'datos': datos
-    })
+        'precios': list(precios)  # Convertir QuerySet a lista para pasarlo al template
+    }
+    return render(request, 'dashboard.html', context)
     
 
 

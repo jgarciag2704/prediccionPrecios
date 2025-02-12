@@ -18,8 +18,9 @@ body, html {
 }
 
 .index-page {
-  background: url('../assets/img/hero-bg.jpg') no-repeat center center fixed;
-  background-size: cover;
+  /*background: url('../assets/img/hero-bg.jpg') no-repeat center center fixed;*/
+  background-color: wheat;
+  
 }
 
 .header {

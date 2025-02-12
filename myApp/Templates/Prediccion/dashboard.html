@@ -13,9 +13,29 @@
         </select>
     </form>
 
-    {% if datos %}
-        <canvas id="graficaPrecios"></canvas>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <figure class="highcharts-figure">
+        <div id="container"></div>
+    </figure>
+
+    <script>
         
-    {% endif %}
-    {% endblock content %}
+        document.addEventListener("DOMContentLoaded", function() {
+            let precios =JSON.parse('{{ precios|safe|escapejs }}');
+            let dataSeries = precios.map(item => [new Date(item.fecha).getTime(), item.precioPromedio]);
+
+            Highcharts.chart('container', {
+                chart: { type: 'spline' },
+                title: { text: 'Histórico de Precios' },
+                xAxis: { type: 'datetime' },
+                yAxis: { title: { text: 'Precio Promedio' } },
+                series: [{
+                    name: "Precio Promedio",
+                    data: dataSeries
+                }]
+            });
+        });
+    </script>
+
+{% endblock %}
