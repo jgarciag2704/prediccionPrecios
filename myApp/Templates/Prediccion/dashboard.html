@@ -19,22 +19,29 @@
         <div id="container"></div>
     </figure>
 
-    <script>
-        
-        document.addEventListener("DOMContentLoaded", function() {
-            let precios =JSON.parse('{{ precios|safe|escapejs }}');
-            let dataSeries = precios.map(item => [new Date(item.fecha).getTime(), item.precioPromedio]);
+    <!-- Guardamos precios en un script seguro -->
+    <script id="data-precios" type="application/json">{{ precios|safe }}</script>
 
-            Highcharts.chart('container', {
-                chart: { type: 'spline' },
-                title: { text: 'Histórico de Precios' },
-                xAxis: { type: 'datetime' },
-                yAxis: { title: { text: 'Precio Promedio' } },
-                series: [{
-                    name: "Precio Promedio",
-                    data: dataSeries
-                }]
-            });
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let precios = JSON.parse(document.getElementById("data-precios").textContent);
+
+            if (precios.length > 0) {
+                let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
+
+                Highcharts.chart('container', {
+                    chart: { type: 'spline' },
+                    title: { text: 'Histórico de Precios' },
+                    xAxis: { type: 'datetime' },
+                    yAxis: { title: { text: 'Precio Promedio' } },
+                    series: [{
+                        name: "Precio Promedio",
+                        data: dataSeries
+                    }]
+                });
+            } else {
+                document.getElementById("container").innerHTML = "<p>No hay datos disponibles</p>";
+            }
         });
     </script>
 

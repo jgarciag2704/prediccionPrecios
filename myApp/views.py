@@ -7,6 +7,9 @@ from django.contrib import messages
 from django.shortcuts import redirect
 import os
 import tempfile
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+
 
 # Create your views here.
 
@@ -22,24 +25,27 @@ def about(request):
         'username':username
     })
 
-    
-    
-def dashboard(request):
+def dashboard(request): 
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
     precios = []
 
     if request.method == 'POST':
-        nombre_seleccionado = request.POST.get('Nombre')
+        nombre_seleccionado = request.POST.get('nombre')
         if nombre_seleccionado:
-            precios = historicoPrecios.objects.filter(nombre=nombre_seleccionado).values('fecha', 'precioPromedio')
+            precios = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values('Fecha', 'preciopromedio')
+            precios = [
+                {"fecha": item["Fecha"].strftime("%Y-%m-%d"), "precioPromedio": float(item["preciopromedio"])}
+                for item in precios
+            ]
 
     context = {
         'title': 'Histórico de Precios',
         'nombres': nombres,
-        'precios': list(precios)  # Convertir QuerySet a lista para pasarlo al template
+        'precios': json.dumps(precios, cls=DjangoJSONEncoder), 
     }
-    return render(request, 'dashboard.html', context)
+    return render(request, 'Prediccion/dashboard.html', context)    
     
+ 
 
 
 def process_excel(request):

@@ -9,8 +9,8 @@ class historicoPrecios (models.Model):
     Presentacion=models.TextField()
     Origen=models.TextField()
     mercadoDeAbastos=models.TextField()
-    precioMinimo=models.DecimalField(max_digits=7,  # 9999.99 (hasta 4 enteros y 2 decimales)
-        decimal_places=2,validators=[MinValueValidator(0)],  # Evita precios negativos
+    precioMinimo=models.DecimalField(max_digits=7, 
+        decimal_places=2,validators=[MinValueValidator(0)],  
     )
     precioMaximo=models.DecimalField(max_digits=7,  
         decimal_places=2,validators=[MinValueValidator(0)],  
