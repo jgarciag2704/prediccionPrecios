@@ -23,28 +23,45 @@
 
     <!-- Guardamos precios en un script seguro -->
     <script id="data-precios" type="application/json">{{ precios|safe }}</script>
-
+    <script id="data-predicciones" type="application/json">{{ predicciones|safe }}</script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let precios = JSON.parse(document.getElementById("data-precios").textContent);
+            let predicciones = JSON.parse(document.getElementById("data-predicciones").textContent);
 
-            if (precios.length > 0) {
-                let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
+            let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
 
-                Highcharts.chart('container', {
-                    chart: { type: 'spline' },
-                    title: { text: 'Histórico de Precios' },
-                    xAxis: { type: 'datetime' },
-                    yAxis: { title: { text: 'Precio Promedio' } },
-                    series: [{
-                        name: "Precio Promedio",
-                        data: dataSeries
-                    }]
-                });
-            } else {
-                document.getElementById("container").innerHTML = "<p>No hay datos disponibles</p>";
-            }
+            // Crear los datos para las predicciones
+            let prediccionSeries = predicciones.map(item => [Date.parse(item.fecha), item.precio]);
+
+            // Crear el gráfico
+            Highcharts.chart('container', {
+                chart: { 
+                    type: 'spline' 
+                },
+                title: { 
+                    text: 'Histórico de Precios y Predicciones Futuras' 
+                },
+                xAxis: { 
+                    type: 'datetime' 
+                },
+                yAxis: { 
+                    title: { 
+                        text: 'Precio Promedio' 
+                    }
+                },
+                series: [{
+                    name: "Precio Promedio Histórico",
+                    data: dataSeries
+                }, {
+                    name: "Predicciones Futuras",
+                    data: prediccionSeries,
+                    dashStyle: 'ShortDash',  // Estilo de línea discontinua para las predicciones
+                    color: 'red'  // Puedes elegir el color que prefieras
+                }]
+            });
         });
     </script>
+
 
 {% endblock %}
