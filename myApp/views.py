@@ -28,22 +28,28 @@ def about(request):
 def dashboard(request): 
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
     precios = []
-
+    presentacion = ""
+    mercado=""
     if request.method == 'POST':
         nombre_seleccionado = request.POST.get('nombre')
         if nombre_seleccionado:
-            precios = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values('Fecha', 'preciopromedio')
+            precios = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values('Fecha', 'preciopromedio', 'Presentacion',"mercadoDeAbastos")
             precios = [
                 {"fecha": item["Fecha"].strftime("%Y-%m-%d"), "precioPromedio": float(item["preciopromedio"])}
                 for item in precios
             ]
+            presentacion = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('Presentacion', flat=True).first() or ""
+            mercado = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('mercadoDeAbastos', flat=True).first() or ""
 
     context = {
         'title': 'Histórico de Precios',
         'nombres': nombres,
         'precios': json.dumps(precios, cls=DjangoJSONEncoder), 
+        'presentacion': presentacion,
+        'mercado':mercado,
     }
-    return render(request, 'Prediccion/dashboard.html', context)    
+    return render(request, 'Prediccion/dashboard.html', context)
+  
     
  
 
