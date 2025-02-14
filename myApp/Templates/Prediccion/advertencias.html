@@ -1,0 +1,49 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+  <h1>{{ username }}</h1>
+
+  <h2>Editar Advertencias de Hortaliza</h2>
+
+  {% if messages %}
+    <div class="alert alert-info">
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    
+    <div class="form-group">
+      <label for="id_hortaliza">Selecciona una hortaliza:</label>
+      {{ form.hortaliza }}
+    </div>
+
+    <div class="form-group">
+      <label for="id_advertencias">Advertencias:</label>
+      {{ form.advertencias }}
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </form>
+
+  <script type="text/javascript">
+    const hortalizasAdvertencias = {{ hortalizas_advertencias|safe }};
+    
+    document.getElementById('id_hortaliza').addEventListener('change', function() {
+      const selectedHortalizaId = this.value;
+      const advertenciasField = document.getElementById('id_advertencias');
+      
+      if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
+        advertenciasField.value = hortalizasAdvertencias[selectedHortalizaId];
+      } else {
+        advertenciasField.value = '';  // Clear if no hortaliza is selected
+      }
+    });
+  </script>
+
+{% endblock content %}

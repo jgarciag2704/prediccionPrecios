@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from .models import hortaliza
+
 
 class CreateNewTaskForm(forms.Form):
     excel_file = forms.FileField(label="Cargar archivo Excel", required=True, widget=forms.ClearableFileInput(attrs={'accept': '.xls,.xlsx'}))
@@ -15,3 +17,7 @@ class CreateNewTaskForm(forms.Form):
                 raise ValidationError("Por favor, sube un archivo Excel válido (.xls o .xlsx).")
 
         return excel_file
+
+class HortalizaForm(forms.Form):
+    hortaliza = forms.ModelChoiceField(queryset=hortaliza.objects.all(), label="Selecciona Hortaliza")
+    advertencias = forms.CharField(widget=forms.Textarea, required=False, label="Advertencias")

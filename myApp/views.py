@@ -1,5 +1,5 @@
-from django.shortcuts import render,redirect
-from .models import historicoPrecios
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import historicoPrecios,hortaliza  
 from django.http import HttpResponse,JsonResponse
 import pandas as pd
 import numpy as np
@@ -15,7 +15,7 @@ from tensorflow.keras.models import Sequential
 import tensorflow as tf
 from prophet import Prophet  # Importamos Prophet
 from sklearn.preprocessing import MinMaxScaler
-
+from .forms import HortalizaForm
 
 
 # Create your views here.
@@ -31,6 +31,41 @@ def about(request):
     return render(request,"about.html",{
         'username':username
     })
+      
+
+def advertencias(request):
+    hortaliza_obj = None  
+    advertencias_texto = ""
+
+    # Obtener las advertencias de todas las hortalizas
+    hortalizas_advertencias = {
+        hortaliza.id: hortaliza.advertencias for hortaliza in hortaliza.objects.all()
+    }
+
+    if request.method == 'POST':
+        form = HortalizaForm(request.POST)
+        if form.is_valid():
+            hortaliza_obj = form.cleaned_data['hortaliza']
+            advertencias_texto = form.cleaned_data['advertencias']
+
+            # Guardamos las advertencias en la base de datos
+            hortaliza_obj.advertencias = advertencias_texto
+            hortaliza_obj.save()
+
+            messages.success(request, "Advertencia actualizada con éxito.")
+            return redirect('advertencias')  
+    else:
+        form = HortalizaForm()
+
+    return render(request, 'Prediccion/advertencias.html', {
+        'form': form,
+        'hortalizas_advertencias': hortalizas_advertencias
+    })
+
+
+
+
+
 
 def dashboard(request): 
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
@@ -53,10 +88,10 @@ def dashboard(request):
                 df.set_index('Fecha', inplace=True)
 
                 # 1. Predicción con ARIMA (comentado por defecto)
-                # predicciones = prediccion_arima(df)
+                predicciones = prediccion_arima(df)
 
                 # 2. Predicción con Prophet (descomentado por defecto)
-                predicciones = prediccion_prophet(df)
+                #predicciones = prediccion_prophet(df)
 
                 # 3. Predicción con LSTM (descomentado por defecto)
                 #predicciones = prediccion_lstm(df)
@@ -201,11 +236,25 @@ def confirmar_carga(request):
             # Validar las columnas
             expected_columns = ['Fecha', 'Nombre', 'Calidad', 'Presentacion', 'Origen', 'precioMinimo', 'precioMaximo', 'preciopromedio']
             if not all(col in df.columns for col in expected_columns):
-                messages.error(request, "El archivo Excel tiene un formato incorrecto.")
+                missing_columns = [col for col in expected_columns if col not in df.columns]
+                messages.error(request, f"El archivo Excel tiene un formato incorrecto. Faltan las columnas: {', '.join(missing_columns)}.")
                 return redirect('process_excel')
             
             # Iterar sobre cada fila y guardar los datos
             for index, row in df.iterrows():
+                # Verificar si ya existe una hortaliza con el mismo nombre
+                hortaliza_obj = hortaliza.objects.filter(Nombre=row['Nombre']).first()
+
+                if not hortaliza_obj:
+                    # Si no existe, crear una nueva hortaliza
+                    advertencias = "No hay advertencias"  # Valor por defecto para Advertencias
+                    
+                    hortaliza_obj = hortaliza.objects.create(
+                        Nombre=row['Nombre'],
+                        advertencias=advertencias  # Asignamos el valor por defecto de advertencias
+                    )
+                
+                # Crear la entrada de historicoPrecios, asociando la hortaliza correspondiente
                 historicoPrecios.objects.create(
                     Fecha=row['Fecha'],
                     Nombre=row['Nombre'],
@@ -215,13 +264,19 @@ def confirmar_carga(request):
                     mercadoDeAbastos=option,
                     precioMinimo=row['precioMinimo'],
                     precioMaximo=row['precioMaximo'],
-                    preciopromedio=row['preciopromedio']
+                    preciopromedio=row['preciopromedio'],
+                    hortaliza=hortaliza_obj  # Asociar el id de la hortaliza
                 )
+            
             messages.success(request, "Los datos se han cargado correctamente.")
-            return redirect('success_url')
+            return redirect('dashboard')
         except Exception as e:
-            messages.error(request, f"Ha ocurrido un error: {str(e)}")
-            return redirect('prediccion/dashboard')
+            # Capturar cualquier error que ocurra
+            messages.error(request, f"Ha ocurrido un error al procesar el archivo Excel: {str(e)}")
+            return redirect('cargaExcel')
     else:
         return redirect('dashboard')
+
+
+
 

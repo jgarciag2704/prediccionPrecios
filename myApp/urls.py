@@ -6,6 +6,7 @@ urlpatterns = [
     path('dashboard/',views.dashboard,name="dashboard"),
     path('cargaExcel/',views.process_excel,name="cargaExcel"),
     path('confirmar_carga/', views.confirmar_carga, name='confirmar_carga'),
+    path('advertencias/',views.advertencias,name='advertencias'),
 
 
 ]
