@@ -132,29 +132,46 @@ def prediccion_arima(df):
         return []
 
 
+
 def prediccion_prophet(df):
     try:
         # Preparar los datos para Prophet
         df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
         df_prophet.columns = ['ds', 'y']
 
-        # Crear y entrenar el modelo Prophet
-        modelo_prophet = Prophet()
+        # Configurar modelo Prophet con estacionalidad y sensibilidad ajustada
+        modelo_prophet = Prophet(
+            changepoint_prior_scale=0.05,  # Ajustar la sensibilidad a cambios de tendencia
+            yearly_seasonality=True,  # Detectar patrones anuales
+            weekly_seasonality=False,  # No relevante para precios de verduras
+            daily_seasonality=False  # Evitar sobreajustes diarios
+        )
+
+        # Agregar estacionalidad mensual para variaciones intra-anuales
+        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=10)
+
+        # Entrenar modelo
         modelo_prophet.fit(df_prophet)
 
         # Generar fechas futuras desde el último punto del dataset
         ultimo_valor = df.index[-1]
-        futuro = modelo_prophet.make_future_dataframe(periods=500, freq='D')
-        futuro = futuro[ futuro['ds'] >= ultimo_valor ]  # Filtrar para iniciar en el último valor conocido
+        futuro = modelo_prophet.make_future_dataframe(periods=365, freq='D')  # Reducido a 180 días
+        futuro = futuro[futuro['ds'] >= ultimo_valor]  # Filtrar para evitar fechas innecesarias
 
         # Hacer predicciones
         predicciones_futuras = modelo_prophet.predict(futuro)
 
+        # Filtrar solo las predicciones futuras
+        predicciones_futuras = predicciones_futuras[['ds', 'yhat']]
+        predicciones_futuras = predicciones_futuras[predicciones_futuras['ds'] > ultimo_valor]
+
         # Formatear resultados
         return [{"fecha": row['ds'].strftime("%Y-%m-%d"), "precio": round(row['yhat'], 2)} for _, row in predicciones_futuras.iterrows()]
+    
     except Exception as e:
         print("Error en Prophet:", e)
         return []
+
 
 
 def prediccion_lstm(df, n_pred=365):
