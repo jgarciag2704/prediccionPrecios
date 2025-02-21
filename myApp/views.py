@@ -16,6 +16,7 @@ import tensorflow as tf
 from prophet import Prophet  # Importamos Prophet
 from sklearn.preprocessing import MinMaxScaler
 from .forms import HortalizaForm
+from django.utils.dateparse import parse_date
 
 
 # Create your views here.
@@ -62,13 +63,7 @@ def advertencias(request):
         'hortalizas_advertencias': hortalizas_advertencias
     })
 
-
-
-
-
-
-
-def dashboard(request): 
+def dashboard(request):
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
     precios = []
     predicciones = []
@@ -77,20 +72,38 @@ def dashboard(request):
 
     if request.method == 'POST':
         nombre_seleccionado = request.POST.get('nombre')
+        fecha_inicio_str = request.POST.get('fecha_inicio', '')
+        fecha_fin_str = request.POST.get('fecha_fin', '')
+
+        fecha_inicio = parse_date(fecha_inicio_str) if fecha_inicio_str else None
+        fecha_fin = parse_date(fecha_fin_str) if fecha_fin_str else None
+
         if nombre_seleccionado:
-            datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values('Fecha', 'preciopromedio')
-            df = pd.DataFrame(list(datos))
+            datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado)
             
+            if fecha_inicio and fecha_fin:
+                datos = datos.filter(Fecha__range=[fecha_inicio, fecha_fin])
+
+            datos = datos.values('Fecha', 'preciopromedio')
+            df = pd.DataFrame(list(datos))
+
             if not df.empty:
                 df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
                 df = df.dropna().sort_values('Fecha')
                 df.set_index('Fecha', inplace=True)
                 
                 df['preciopromedio'] = pd.to_numeric(df['preciopromedio'], errors='coerce')
-                df = df.dropna(subset=['preciopromedio'])  # Eliminar filas con precios inválidos
+                df = df.dropna(subset=['preciopromedio'])
+
+                # Convertir datos históricos a JSON para la gráfica
+                precios = [{"fecha": fecha.strftime("%Y-%m-%d"), "precioPromedio": precio} for fecha, precio in df['preciopromedio'].items()]
+
                 if not df.empty and len(df) > 10:
-                    predicciones = prediccion_arima(df)  # O cambiar a prediccion_prophet(df) o prediccion_lstm(df)
-                
+                    #predicciones = prediccion_arima(df)
+                    predicciones = prediccion_prophet(df)#va siendo el mejor hasta el momento
+                    #predicciones =prediccion_lstm(df)
+
+            # Obtener información adicional
             presentacion = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('Presentacion', flat=True).first() or ""
             mercado = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('mercadoDeAbastos', flat=True).first() or ""
 
@@ -109,9 +122,10 @@ def prediccion_arima(df):
     try:
         modelo = ARIMA(df['preciopromedio'], order=(5,1,0))
         modelo_fit = modelo.fit()
-        pasos_futuros = 10
+        pasos_futuros = 365
         predicciones_futuras = modelo_fit.forecast(steps=pasos_futuros)
         fechas_futuras = pd.date_range(start=df.index[-1], periods=pasos_futuros + 1)[1:]
+
         return [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": round(precio, 2)} for fecha, precio in zip(fechas_futuras, predicciones_futuras)]
     except Exception as e:
         print("Error en ARIMA:", e)
@@ -120,19 +134,30 @@ def prediccion_arima(df):
 
 def prediccion_prophet(df):
     try:
+        # Preparar los datos para Prophet
         df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
         df_prophet.columns = ['ds', 'y']
+
+        # Crear y entrenar el modelo Prophet
         modelo_prophet = Prophet()
         modelo_prophet.fit(df_prophet)
-        futuro = modelo_prophet.make_future_dataframe(periods=10)
+
+        # Generar fechas futuras desde el último punto del dataset
+        ultimo_valor = df.index[-1]
+        futuro = modelo_prophet.make_future_dataframe(periods=500, freq='D')
+        futuro = futuro[ futuro['ds'] >= ultimo_valor ]  # Filtrar para iniciar en el último valor conocido
+
+        # Hacer predicciones
         predicciones_futuras = modelo_prophet.predict(futuro)
+
+        # Formatear resultados
         return [{"fecha": row['ds'].strftime("%Y-%m-%d"), "precio": round(row['yhat'], 2)} for _, row in predicciones_futuras.iterrows()]
     except Exception as e:
         print("Error en Prophet:", e)
         return []
 
 
-def prediccion_lstm(df):
+def prediccion_lstm(df, n_pred=365):
     try:
         df_lstm = df[['preciopromedio']].values
         scaler = MinMaxScaler(feature_range=(0, 1))
@@ -146,22 +171,36 @@ def prediccion_lstm(df):
         x_train, y_train = np.array(x_train), np.array(y_train)
         x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
         
-        modelo_lstm = Sequential()
-        modelo_lstm.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
-        modelo_lstm.add(LSTM(units=50, return_sequences=False))
-        modelo_lstm.add(Dense(units=1))
+        modelo_lstm = Sequential([
+            LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)),
+            LSTM(units=50, return_sequences=False),
+            Dense(units=1)
+        ])
         modelo_lstm.compile(optimizer='adam', loss='mean_squared_error')
         modelo_lstm.fit(x_train, y_train, epochs=10, batch_size=32, verbose=0)
         
-        inputs = df_scaled[-60:].reshape(1, -1)
-        inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 1))
-        predicciones_futuras = modelo_lstm.predict(inputs)
-        predicciones_futuras = scaler.inverse_transform(predicciones_futuras)
-        
-        return [{"fecha": (df.index[-1] + pd.Timedelta(days=i+1)).strftime("%Y-%m-%d"), "precio": round(pred, 2)} for i, pred in enumerate(predicciones_futuras.flatten())]
+        # Generar predicciones extendidas
+        inputs = df_scaled[-60:].tolist()  # Últimos 60 valores
+        predicciones_futuras = []
+
+        for i in range(n_pred):
+            input_array = np.array(inputs[-60:]).reshape(1, 60, 1)  # Tomar los últimos 60 valores
+            prediccion = modelo_lstm.predict(input_array)[0][0]  # Predecir el siguiente valor
+            predicciones_futuras.append(prediccion)
+            inputs.append([prediccion])  # Agregar la predicción a la secuencia
+
+        # Desescalar predicciones
+        predicciones_futuras = scaler.inverse_transform(np.array(predicciones_futuras).reshape(-1, 1))
+
+        # Generar fechas futuras desde el último punto del dataset
+        ultima_fecha = df.index[-1]
+        fechas_futuras = [(ultima_fecha + pd.Timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(n_pred)]
+
+        return [{"fecha": fecha, "precio": float(precio[0])} for fecha, precio in zip(fechas_futuras, predicciones_futuras)]
     except Exception as e:
         print("Error en LSTM:", e)
         return []
+
 
 
 #------------------------------------------------------------------------------------------------

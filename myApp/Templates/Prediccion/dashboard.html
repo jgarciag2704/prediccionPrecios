@@ -11,6 +11,14 @@
                 <option value="{{ nombre }}" {% if nombre == request.POST.nombre %}selected{% endif %}>{{ nombre }}</option>
             {% endfor %}
         </select>
+        <label for="fecha_inicio">Desde:</label>
+    <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ request.POST.fecha_inicio }}">
+
+    <label for="fecha_fin">Hasta:</label>
+    <input type="date" id="fecha_fin" name="fecha_fin" value="{{ request.POST.fecha_fin }}">
+
+    <button type="submit">Filtrar</button>
+
     </form>
     <p id="presentacionLabel"><strong>Presentación:</strong> {{ presentacion }}</p>
     <p id="mercadoLabel"><strong>Presentación:</strong> {{ mercado }}</p>
@@ -25,43 +33,37 @@
     <script id="data-precios" type="application/json">{{ precios|safe }}</script>
     <script id="data-predicciones" type="application/json">{{ predicciones|safe }}</script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let precios = JSON.parse(document.getElementById("data-precios").textContent);
-            let predicciones = JSON.parse(document.getElementById("data-predicciones").textContent);
+document.addEventListener("DOMContentLoaded", function() {
+    let precios = JSON.parse(document.getElementById("data-precios").textContent);
+    let predicciones = JSON.parse(document.getElementById("data-predicciones").textContent);
 
-            let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
+    let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
+    let prediccionSeries = predicciones.map(item => [Date.parse(item.fecha), item.precio]);
 
-            // Crear los datos para las predicciones
-            let prediccionSeries = predicciones.map(item => [Date.parse(item.fecha), item.precio]);
+    if (dataSeries.length > 0 && prediccionSeries.length > 0) {
+        let ultimaFecha = dataSeries[dataSeries.length - 1][0];
+        prediccionSeries.unshift([ultimaFecha, dataSeries[dataSeries.length - 1][1]]);
+    }
 
-            // Crear el gráfico
-            Highcharts.chart('container', {
-                chart: { 
-                    type: 'spline' 
-                },
-                title: { 
-                    text: 'Histórico de Precios y Predicciones Futuras' 
-                },
-                xAxis: { 
-                    type: 'datetime' 
-                },
-                yAxis: { 
-                    title: { 
-                        text: 'Precio Promedio' 
-                    }
-                },
-                series: [{
-                    name: "Precio Promedio Histórico",
-                    data: dataSeries
-                }, {
-                    name: "Predicciones Futuras",
-                    data: prediccionSeries,
-                    dashStyle: 'ShortDash',  // Estilo de línea discontinua para las predicciones
-                    color: 'red'  // Puedes elegir el color que prefieras
-                }]
-            });
-        });
-    </script>
+    Highcharts.chart('container', {
+        chart: { type: 'spline' },
+        title: { text: 'Histórico de Precios y Predicciones Futuras' },
+        xAxis: { type: 'datetime' },
+        yAxis: { title: { text: 'Precio Promedio' }},
+        series: [{
+            name: "Precio Promedio Histórico",
+            data: dataSeries,
+            color: 'blue'
+        }, {
+            name: "Predicciones Futuras",
+            data: prediccionSeries,
+            dashStyle: 'ShortDash',
+            color: 'red'
+        }]
+    });
+});
+</script>
+
 
 
 {% endblock %}
