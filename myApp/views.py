@@ -67,6 +67,7 @@ def advertencias(request):
 
 
 
+
 def dashboard(request): 
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
     precios = []
@@ -77,25 +78,19 @@ def dashboard(request):
     if request.method == 'POST':
         nombre_seleccionado = request.POST.get('nombre')
         if nombre_seleccionado:
-            # Obtener los datos históricos del producto seleccionado
             datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values('Fecha', 'preciopromedio')
             df = pd.DataFrame(list(datos))
             
             if not df.empty:
-                # Convertir la columna de fecha a datetime y ordenarla
-                df['Fecha'] = pd.to_datetime(df['Fecha'])
-                df = df.sort_values('Fecha')
+                df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
+                df = df.dropna().sort_values('Fecha')
                 df.set_index('Fecha', inplace=True)
-
-                # 1. Predicción con ARIMA (comentado por defecto)
-                predicciones = prediccion_arima(df)
-
-                # 2. Predicción con Prophet (descomentado por defecto)
-                #predicciones = prediccion_prophet(df)
-
-                # 3. Predicción con LSTM (descomentado por defecto)
-                #predicciones = prediccion_lstm(df)
-
+                
+                df['preciopromedio'] = pd.to_numeric(df['preciopromedio'], errors='coerce')
+                df = df.dropna(subset=['preciopromedio'])  # Eliminar filas con precios inválidos
+                if not df.empty and len(df) > 10:
+                    predicciones = prediccion_arima(df)  # O cambiar a prediccion_prophet(df) o prediccion_lstm(df)
+                
             presentacion = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('Presentacion', flat=True).first() or ""
             mercado = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('mercadoDeAbastos', flat=True).first() or ""
 
@@ -103,90 +98,71 @@ def dashboard(request):
         'title': 'Histórico de Precios',
         'nombres': nombres,
         'precios': json.dumps(precios, cls=DjangoJSONEncoder), 
-        'predicciones': json.dumps(predicciones, cls=DjangoJSONEncoder),  # Enviamos predicciones a la plantilla
+        'predicciones': json.dumps(predicciones, cls=DjangoJSONEncoder),
         'presentacion': presentacion,
         'mercado': mercado,
     }
     return render(request, 'Prediccion/dashboard.html', context)
 
 
-# Método para predicción con ARIMA
 def prediccion_arima(df):
-    # Ajustar un modelo ARIMA (p, d, q)
-    modelo = ARIMA(df['preciopromedio'], order=(5,1,0))  # Los parámetros (5, 1, 0) son ajustables
-    modelo_fit = modelo.fit()
-
-    # Generar predicciones para los próximos 10 días
-    pasos_futuros = 10
-    predicciones_futuras = modelo_fit.forecast(steps=pasos_futuros)
-
-    # Convertir a lista de diccionarios
-    fechas_futuras = pd.date_range(start=df.index[-1], periods=pasos_futuros + 1)[1:]
-    return [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": round(precio, 2)}
-            for fecha, precio in zip(fechas_futuras, predicciones_futuras)]
+    try:
+        modelo = ARIMA(df['preciopromedio'], order=(5,1,0))
+        modelo_fit = modelo.fit()
+        pasos_futuros = 10
+        predicciones_futuras = modelo_fit.forecast(steps=pasos_futuros)
+        fechas_futuras = pd.date_range(start=df.index[-1], periods=pasos_futuros + 1)[1:]
+        return [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": round(precio, 2)} for fecha, precio in zip(fechas_futuras, predicciones_futuras)]
+    except Exception as e:
+        print("Error en ARIMA:", e)
+        return []
 
 
-# Método para predicción con Prophet
 def prediccion_prophet(df):
-    # Preparar datos para Prophet
-    df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
-    df_prophet.columns = ['ds', 'y']  # Prophet requiere las columnas 'ds' para fechas y 'y' para valores
-
-    # Crear y ajustar el modelo Prophet
-    modelo_prophet = Prophet()
-    modelo_prophet.fit(df_prophet)
-
-    # Generar predicciones para los próximos 10 días
-    futuro = modelo_prophet.make_future_dataframe(df_prophet, periods=10)
-    predicciones_futuras = modelo_prophet.predict(futuro)
-
-    # Convertir las predicciones en un formato de diccionario
-    predicciones = [{"fecha": row['ds'].strftime("%Y-%m-%d"), "precio": round(row['yhat'], 2)}
-                    for idx, row in predicciones_futuras.iterrows()]
-    return predicciones
+    try:
+        df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
+        df_prophet.columns = ['ds', 'y']
+        modelo_prophet = Prophet()
+        modelo_prophet.fit(df_prophet)
+        futuro = modelo_prophet.make_future_dataframe(periods=10)
+        predicciones_futuras = modelo_prophet.predict(futuro)
+        return [{"fecha": row['ds'].strftime("%Y-%m-%d"), "precio": round(row['yhat'], 2)} for _, row in predicciones_futuras.iterrows()]
+    except Exception as e:
+        print("Error en Prophet:", e)
+        return []
 
 
-# Método para predicción con LSTM
 def prediccion_lstm(df):
-    # Preprocesar los datos para LSTM
-    df_lstm = df[['preciopromedio']].values
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    df_scaled = scaler.fit_transform(df_lstm)
+    try:
+        df_lstm = df[['preciopromedio']].values
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        df_scaled = scaler.fit_transform(df_lstm)
+        
+        x_train, y_train = [], []
+        for i in range(60, len(df_scaled)):
+            x_train.append(df_scaled[i-60:i, 0])
+            y_train.append(df_scaled[i, 0])
+        
+        x_train, y_train = np.array(x_train), np.array(y_train)
+        x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+        
+        modelo_lstm = Sequential()
+        modelo_lstm.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+        modelo_lstm.add(LSTM(units=50, return_sequences=False))
+        modelo_lstm.add(Dense(units=1))
+        modelo_lstm.compile(optimizer='adam', loss='mean_squared_error')
+        modelo_lstm.fit(x_train, y_train, epochs=10, batch_size=32, verbose=0)
+        
+        inputs = df_scaled[-60:].reshape(1, -1)
+        inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 1))
+        predicciones_futuras = modelo_lstm.predict(inputs)
+        predicciones_futuras = scaler.inverse_transform(predicciones_futuras)
+        
+        return [{"fecha": (df.index[-1] + pd.Timedelta(days=i+1)).strftime("%Y-%m-%d"), "precio": round(pred, 2)} for i, pred in enumerate(predicciones_futuras.flatten())]
+    except Exception as e:
+        print("Error en LSTM:", e)
+        return []
 
-    # Crear los datos de entrenamiento (secundarios de 60 días)
-    x_train, y_train = [], []
-    for i in range(60, len(df_scaled)):
-        x_train.append(df_scaled[i-60:i, 0])
-        y_train.append(df_scaled[i, 0])
-
-    x_train, y_train = np.array(x_train), np.array(y_train)
-
-    # Redimensionar los datos para LSTM
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-
-    # Crear el modelo LSTM
-    modelo_lstm = Sequential()
-    modelo_lstm.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
-    modelo_lstm.add(LSTM(units=50, return_sequences=False))
-    modelo_lstm.add(Dense(units=1))
-    modelo_lstm.compile(optimizer='adam', loss='mean_squared_error')
-
-    # Ajustar el modelo
-    modelo_lstm.fit(x_train, y_train, epochs=10, batch_size=32)
-
-    # Realizar predicciones para los siguientes 10 días
-    inputs = df_scaled[len(df_scaled) - 60:].reshape(1, -1)
-    inputs = np.reshape(inputs, (inputs.shape[0], inputs.shape[1], 1))
-    predicciones_futuras = modelo_lstm.predict(inputs)
-
-    # Desescalar las predicciones y convertirlas a formato de diccionario
-    predicciones_futuras = scaler.inverse_transform(predicciones_futuras)
-    predicciones = [{"fecha": (df.index[-1] + pd.Timedelta(days=i+1)).strftime("%Y-%m-%d"), "precio": round(pred, 2)}
-                    for i, pred in enumerate(predicciones_futuras.flatten())]
-
-    return predicciones
-    
- 
 
 #------------------------------------------------------------------------------------------------
 def process_excel(request):
