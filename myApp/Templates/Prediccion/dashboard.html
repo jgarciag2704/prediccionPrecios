@@ -24,7 +24,8 @@
     <p id="mercadoLabel"><strong>Presentación:</strong> {{ mercado }}</p>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
-
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    
     <figure class="highcharts-figure">
         <div id="container"></div>
     </figure>
@@ -34,34 +35,65 @@
     <script id="data-predicciones" type="application/json">{{ predicciones|safe }}</script>
     <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Cargar highcharts-more dinámicamente si no está presente
+    if (!Highcharts.Series.types.arearange) {
+        let script = document.createElement('script');
+        script.src = "https://code.highcharts.com/highcharts-more.js";
+        document.head.appendChild(script);
+        script.onload = function() {
+            iniciarGrafico(); // Llamar a la función de inicialización una vez cargado el script
+        };
+    } else {
+        iniciarGrafico(); // Si ya está cargado, inicializar directamente
+    }
+});
+
+function iniciarGrafico() {
     let precios = JSON.parse(document.getElementById("data-precios").textContent);
     let predicciones = JSON.parse(document.getElementById("data-predicciones").textContent);
 
     let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
     let prediccionSeries = predicciones.map(item => [Date.parse(item.fecha), item.precio]);
+    let intervaloInferior = predicciones.map(item => [Date.parse(item.fecha), item.min_95]);
+    let intervaloSuperior = predicciones.map(item => [Date.parse(item.fecha), item.max_95]);
 
     if (dataSeries.length > 0 && prediccionSeries.length > 0) {
         let ultimaFecha = dataSeries[dataSeries.length - 1][0];
-        prediccionSeries.unshift([ultimaFecha, dataSeries[dataSeries.length - 1][1]]);
+        let ultimoPrecio = dataSeries[dataSeries.length - 1][1];
+        prediccionSeries.unshift([ultimaFecha, ultimoPrecio]);
+        intervaloInferior.unshift([ultimaFecha, ultimoPrecio]);
+        intervaloSuperior.unshift([ultimaFecha, ultimoPrecio]);
     }
 
     Highcharts.chart('container', {
         chart: { type: 'spline' },
-        title: { text: 'Histórico de Precios y Predicciones Futuras' },
+        title: { text: 'Histórico de Precios y Predicción con Intervalo de Confianza' },
         xAxis: { type: 'datetime' },
         yAxis: { title: { text: 'Precio Promedio' }},
-        series: [{
-            name: "Precio Promedio Histórico",
-            data: dataSeries,
-            color: 'blue'
-        }, {
-            name: "Predicciones Futuras",
-            data: prediccionSeries,
-            dashStyle: 'ShortDash',
-            color: 'red'
-        }]
+        series: [
+            {
+                name: "Precio Promedio Histórico",
+                data: dataSeries,
+                color: 'blue'
+            },
+            {
+                name: "Predicción",
+                data: prediccionSeries,
+                color: 'green',
+                dashStyle: 'ShortDash',
+                marker: { enabled: false }
+            },
+            {
+                name: "Intervalo de Confianza (90%)",
+                type: 'arearange',
+                data: intervaloInferior.map((item, i) => [item[0], intervaloInferior[i][1], intervaloSuperior[i][1]]),
+                color: 'rgba(0, 128, 0, 0.2)',
+                enableMouseTracking: false
+            }
+        ]
     });
-});
+}
+
 </script>
 
 

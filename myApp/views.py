@@ -78,6 +78,16 @@ def dashboard(request):
         fecha_inicio = parse_date(fecha_inicio_str) if fecha_inicio_str else None
         fecha_fin = parse_date(fecha_fin_str) if fecha_fin_str else None
 
+        # Datos de inflación proporcionados
+        inflacion_data = {
+            'ds': ['2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01', '2024-01-01', '2025-01-01'],
+            'inflacion': [4.83, 2.83, 3.15, 7.36, 7.82, 4.66, 4.21, 3.59]
+        }
+
+        # Convertir fechas a datetime
+        inflacion_df = pd.DataFrame(inflacion_data)
+        inflacion_df['ds'] = pd.to_datetime(inflacion_df['ds'])
+
         if nombre_seleccionado:
             datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado)
             
@@ -117,6 +127,75 @@ def dashboard(request):
     }
     return render(request, 'Prediccion/dashboard.html', context)
 
+def prediccion_prophet(df):
+    try:
+        # Preparar los datos para Prophet
+        df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
+        df_prophet.columns = ['ds', 'y']
+
+        # Configurar modelo Prophet con intervalos de confianza del 95%
+        modelo_prophet = Prophet(
+            changepoint_prior_scale=0.05, 
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            interval_width=0.90  # Establecer intervalo de confianza al 95%
+        )
+        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=10)
+        modelo_prophet.fit(df_prophet)
+
+        # Generar fechas futuras desde el último punto del dataset
+        ultimo_valor = df.index[-1]
+        futuro = modelo_prophet.make_future_dataframe(periods=365, freq='D')
+        futuro = futuro[futuro['ds'] >= ultimo_valor]
+
+        # Hacer predicciones
+        predicciones_futuras = modelo_prophet.predict(futuro)
+
+        # Filtrar solo las columnas necesarias
+        predicciones_futuras = predicciones_futuras[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+        predicciones_futuras = predicciones_futuras[predicciones_futuras['ds'] > ultimo_valor]
+
+        # Ajustar predicciones por inflación
+        inflacion_data = {
+            'ds': ['2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01', '2024-01-01', '2025-01-01'],
+            'inflacion': [4.83, 2.83, 3.15, 7.36, 7.82, 4.66, 4.21, 3.59]
+        }
+
+        inflacion_df = pd.DataFrame(inflacion_data)
+        inflacion_df['ds'] = pd.to_datetime(inflacion_df['ds'])
+        inflacion_df.set_index('ds', inplace=True)
+        inflacion_df = inflacion_df.resample('D').interpolate(method='linear')  # Interpolación diaria
+
+        # Función para ajustar por inflación
+        def ajustar_por_inflacion(fecha, precio):
+            try:
+                tasa_inflacion = inflacion_df.loc[fecha, 'inflacion'] / 100
+                return round(precio * (1 + tasa_inflacion), 2)
+            except KeyError:
+                return precio  # Si no hay dato de inflación, devolver el precio original
+
+        # Aplicar ajuste de inflación a los valores predichos
+        predicciones_futuras['yhat'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat']), axis=1)
+        predicciones_futuras['yhat_lower'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat_lower']), axis=1)
+        predicciones_futuras['yhat_upper'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat_upper']), axis=1)
+
+        # Formatear resultados con los intervalos de confianza
+        return [
+            {
+                "fecha": row['ds'].strftime("%Y-%m-%d"),
+                "precio": row['yhat'],
+                "min_95": row['yhat_lower'],  # Límite inferior del 95%
+                "max_95": row['yhat_upper']   # Límite superior del 95%
+            }
+            for _, row in predicciones_futuras.iterrows()
+        ]
+
+    except Exception as e:
+        print("Error en Prophet:", e)
+        return []
+
+
 
 def prediccion_arima(df):
     try:
@@ -130,48 +209,6 @@ def prediccion_arima(df):
     except Exception as e:
         print("Error en ARIMA:", e)
         return []
-
-
-
-def prediccion_prophet(df):
-    try:
-        # Preparar los datos para Prophet
-        df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
-        df_prophet.columns = ['ds', 'y']
-
-        # Configurar modelo Prophet con estacionalidad y sensibilidad ajustada
-        modelo_prophet = Prophet(
-            changepoint_prior_scale=0.05,  # Ajustar la sensibilidad a cambios de tendencia
-            yearly_seasonality=True,  # Detectar patrones anuales
-            weekly_seasonality=False,  # No relevante para precios de verduras
-            daily_seasonality=False  # Evitar sobreajustes diarios
-        )
-
-        # Agregar estacionalidad mensual para variaciones intra-anuales
-        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=10)
-
-        # Entrenar modelo
-        modelo_prophet.fit(df_prophet)
-
-        # Generar fechas futuras desde el último punto del dataset
-        ultimo_valor = df.index[-1]
-        futuro = modelo_prophet.make_future_dataframe(periods=365, freq='D')  # Reducido a 180 días
-        futuro = futuro[futuro['ds'] >= ultimo_valor]  # Filtrar para evitar fechas innecesarias
-
-        # Hacer predicciones
-        predicciones_futuras = modelo_prophet.predict(futuro)
-
-        # Filtrar solo las predicciones futuras
-        predicciones_futuras = predicciones_futuras[['ds', 'yhat']]
-        predicciones_futuras = predicciones_futuras[predicciones_futuras['ds'] > ultimo_valor]
-
-        # Formatear resultados
-        return [{"fecha": row['ds'].strftime("%Y-%m-%d"), "precio": round(row['yhat'], 2)} for _, row in predicciones_futuras.iterrows()]
-    
-    except Exception as e:
-        print("Error en Prophet:", e)
-        return []
-
 
 
 def prediccion_lstm(df, n_pred=365):
