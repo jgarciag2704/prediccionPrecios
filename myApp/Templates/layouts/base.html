@@ -20,19 +20,19 @@
    <link rel="stylesheet" href="{% static 'vendor/aos/aos.css' %}">
    <link rel="stylesheet" href="{% static 'vendor/glightbox/css/glightbox.min.css' %}">
    <link rel="stylesheet" href="{% static 'vendor/swiper/swiper-bundle.min.css' %}">-->
-   <link rel="stylesheet" href="{% static 'css/main.css' %}">
+   <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2">
 
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body class="index-page">
-  <header id="header" class="header d-flex align-items-center fixed-top" style="background-color: black;">
+  <header id="header" class="header d-flex align-items-center fixed-top" style="background-color: #d3dc7c;">
     <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
   
       <nav id="navmenu" class="navmenu">
         <ul class="d-flex align-items-center">
           <img src="{% static 'assets/img/propias/jumapa.png' %}"  alt="" style="width: 40px; margin-left: 25px;"> 
 
-          <li> <a href="{% url 'index' %}" class="logo d-flex align-items-center"><h1 class="sitename m-0">Titulo</h1></a></li>
+          <li> <a href="{% url 'index' %}" class="logo d-flex align-items-center"></a></li>
           <li><a href="{% url 'index' %}" class="active">Home</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'dashboard' %}">Dashboard</a></li>

@@ -132,16 +132,18 @@ def prediccion_prophet(df):
         # Preparar los datos para Prophet
         df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
         df_prophet.columns = ['ds', 'y']
-
-        # Configurar modelo Prophet con intervalos de confianza del 95%
+        changepoint_prior = 0.08  # Sensible a cambios de tendencia, pero sin sobreajustar
         modelo_prophet = Prophet(
-            changepoint_prior_scale=0.05, 
+            changepoint_prior_scale=changepoint_prior,
             yearly_seasonality=True,
-            weekly_seasonality=False,
+            weekly_seasonality=True,  # Activar estacionalidad semanal (mercados, cosechas)
             daily_seasonality=False,
-            interval_width=0.90  # Establecer intervalo de confianza al 95%
+            interval_width=0.85  # Reducir la amplitud del intervalo de confianza
         )
-        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=10)
+
+        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=8)  # Estacionalidad mensual  
+        modelo_prophet.add_seasonality(name='quarterly', period=90, fourier_order=6)  # Estacionalidad trimestral  
+        modelo_prophet.add_seasonality(name='harvest_season', period=180, fourier_order=4)  # Patrón semestral por cosechas  
         modelo_prophet.fit(df_prophet)
 
         # Generar fechas futuras desde el último punto del dataset
@@ -169,11 +171,13 @@ def prediccion_prophet(df):
 
         # Función para ajustar por inflación
         def ajustar_por_inflacion(fecha, precio):
-            try:
-                tasa_inflacion = inflacion_df.loc[fecha, 'inflacion'] / 100
-                return round(precio * (1 + tasa_inflacion), 2)
-            except KeyError:
-                return precio  # Si no hay dato de inflación, devolver el precio original
+            inflacion_anual = inflacion_df.resample('Y').mean()  # Promediar inflación anual  
+            año = fecha.year  
+            if año in inflacion_anual.index.year:
+                factor = (1 + inflacion_anual.loc[f"{año}-01-01", 'inflacion'] / 100)
+                return round(precio * factor, 2)
+            return precio
+    # Si no hay dato de inflación, devolver el precio original
 
         # Aplicar ajuste de inflación a los valores predichos
         predicciones_futuras['yhat'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat']), axis=1)

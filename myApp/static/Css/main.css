@@ -1,3 +1,70 @@
+
+/* Header */
+.page-header {
+  background: #007BFF;
+  color: white;
+  text-align: center;
+  padding: 100px 0;
+}
+
+/* About Section */
+.about-text {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+}
+
+.about-text h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.about-text p {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.about-text .btn-primary {
+  background-color: #007BFF;
+  border: none;
+  padding: 10px 30px;
+  font-size: 1rem;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.about-text .btn-primary:hover {
+  background-color: #0056b3;
+}
+
+/* Features */
+.container-fluid.pb-5 {
+  padding-top: 50px;
+}
+
+.feature-box {
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.feature-box i {
+  font-size: 40px;
+  color: #007BFF;
+}
+
+.feature-box h5 {
+  margin-top: 15px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.feature-box p {
+  color: #555;
+}
+
+
 /**
 * Template Name: Dewi
 * Template URL: https://bootstrapmade.com/dewi-free-multi-purpose-html-template/
@@ -19,7 +86,7 @@ body, html {
 
 .index-page {
   /*background: url('../assets/img/hero-bg.jpg') no-repeat center center fixed;*/
-  background-color: wheat;
+  background-color: #eae8de;
   
 }
 
@@ -55,8 +122,8 @@ body, html {
 
 /* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
 :root {
-  --nav-color: #e5eaee;  /* The default color of the main navmenu links */
-  --nav-hover-color: #ff4a17; /* Applied to main navmenu links when they are hovered over or active */
+  --nav-color: #f5f212;  /* The default color of the main navmenu links */
+  --nav-hover-color: #1B475D; /* Applied to main navmenu links when they are hovered over or active */
   --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
   --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
   --nav-dropdown-color: #444444; /* Used for navigation links of the dropdown items in the navigation menu. */
@@ -372,7 +439,14 @@ h6 {
     margin-left: 5px;
     transition: 0.3s;
   }
+    .navmenu a {
+      color: #1B475D !important; /* Asegura que el color rojo se aplique */
+      text-decoration: none; /* Opcional: evita subrayado */
+  }
 
+  .navmenu a:hover {
+      color: darkred; /* Opcional: cambia color en hover */
+  }
   .navmenu>ul>li>a:before {
     content: "";
     position: absolute;
