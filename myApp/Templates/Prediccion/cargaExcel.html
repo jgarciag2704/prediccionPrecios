@@ -2,11 +2,25 @@
 
 {% block content %}
 <h1>Carga de Excel</h1>
+
 <form method="post" enctype="multipart/form-data" id="upload-form">
     {% csrf_token %}
-    {{ form.as_p }}
+    
+    <div class="form-group">
+        <label for="excel_file">Cargar archivo Excel:</label>
+        <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xls,.xlsx" required>
+    </div>
+
+    <div class="form-group">
+        <label for="option">Seleccionar opción:</label>
+        <select name="option" id="option" class="form-control">
+            <option value="Central de Abasto de León">Central de Abasto de León</option>
+            <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
+        </select>
+    </div>
+
     <!-- Botón para subir el archivo -->
-    <button type="submit" id="upload-btn">Subir archivo</button>
+    <button type="submit" id="upload-btn" class="btn btn-primary">Subir archivo</button>
 </form>
 
 {% if preview_data %}
@@ -16,8 +30,8 @@
     </div>
     <form method="post" action="{% url 'confirmar_carga' %}">
         {% csrf_token %}
-        <input type="hidden" name="option" value="{{ form.option.value }}">
-        <button type="submit">Confirmar carga</button>
+        <input type="hidden" name="option" value="{{ option }}">
+        <button type="submit" class="btn btn-success">Confirmar carga</button>
     </form>
 {% endif %}
 
@@ -32,4 +46,5 @@
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 {% endblock %}
+
 {% endblock content %}

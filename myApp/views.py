@@ -3,7 +3,6 @@ from .models import historicoPrecios,hortaliza
 from django.http import HttpResponse,JsonResponse
 import pandas as pd
 import numpy as np
-from .forms import CreateNewTaskForm
 from django.contrib import messages
 from django.shortcuts import redirect
 import tempfile
@@ -33,35 +32,36 @@ def about(request):
         'username':username
     })
       
-
 def advertencias(request):
     hortaliza_obj = None  
     advertencias_texto = ""
 
-    # Obtener las advertencias de todas las hortalizas
-    hortalizas_advertencias = {
-        hortaliza.id: hortaliza.advertencias for hortaliza in hortaliza.objects.all()
-    }
+    # Obtener todas las hortalizas con sus advertencias
+    hortalizas = hortaliza.objects.all()
+    hortalizas_advertencias = {hort.id: hort.advertencias for hort in hortalizas}
+    
+    # Imprimir los datos para depuración
+    print(hortalizas_advertencias)
 
     if request.method == 'POST':
-        form = HortalizaForm(request.POST)
-        if form.is_valid():
-            hortaliza_obj = form.cleaned_data['hortaliza']
-            advertencias_texto = form.cleaned_data['advertencias']
+        hortaliza_id = request.POST.get('hortaliza')
+        advertencias_texto = request.POST.get('advertencias', '')
 
-            # Guardamos las advertencias en la base de datos
+        try:
+            hortaliza_obj = hortaliza.objects.get(id=hortaliza_id)
             hortaliza_obj.advertencias = advertencias_texto
             hortaliza_obj.save()
 
             messages.success(request, "Advertencia actualizada con éxito.")
             return redirect('advertencias')  
-    else:
-        form = HortalizaForm()
+        except hortaliza.DoesNotExist:
+            messages.error(request, "Hortaliza no encontrada.")
 
     return render(request, 'Prediccion/advertencias.html', {
-        'form': form,
+        'hortalizas': hortalizas,
         'hortalizas_advertencias': hortalizas_advertencias
     })
+
 
 def dashboard(request):
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
@@ -270,11 +270,21 @@ def prediccion_lstm(df, n_pred=365):
 #------------------------------------------------------------------------------------------------
 def process_excel(request):
     if request.method == 'POST':
-        form = CreateNewTaskForm(request.POST, request.FILES)
-        if form.is_valid():
-            excel_file = request.FILES['excel_file']
-            
-            # Crear un archivo temporal para almacenar el archivo Excel
+        excel_file = request.FILES.get('excel_file')
+        option = request.POST.get('option')
+
+        if not excel_file:
+            messages.error(request, "Por favor, sube un archivo Excel válido.")
+            return redirect('process_excel')
+
+        # Verificar si es un archivo Excel
+        file_name = excel_file.name.lower()
+        if not file_name.endswith(('.xls', '.xlsx')):
+            messages.error(request, "Por favor, sube un archivo Excel válido (.xls o .xlsx).")
+            return redirect('process_excel')
+
+        try:
+            # Crear un archivo temporal
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             temp_file.write(excel_file.read())
             temp_file.close()
@@ -282,22 +292,19 @@ def process_excel(request):
             # Guardar la ruta del archivo temporal en la sesión
             request.session['excel_file_path'] = temp_file.name
 
-            try:
-                # Usar pandas para leer el archivo Excel
-                df = pd.read_excel(temp_file.name)
+            # Leer el archivo con pandas
+            df = pd.read_excel(temp_file.name)
+            preview_data = df.head(50)  # Mostrar solo las primeras 50 filas
 
-                preview_data = df.head(50)  # Limitamos la previsualización a las primeras 50 filas
-                return render(request, 'Prediccion/cargaExcel.html', {
-                    'form': form, 
-                    'preview_data': preview_data.to_html(classes='table table-striped'),
-                })
-            except Exception as e:
-                messages.error(request, f"Error al procesar el archivo Excel: {str(e)}")
-                return redirect('process_excel')  # Redirigir de nuevo a la vista de carga
-    else:
-        form = CreateNewTaskForm()
+            return render(request, 'Prediccion/cargaExcel.html', {
+                'preview_data': preview_data.to_html(classes='table table-striped'),
+                'option': option
+            })
+        except Exception as e:
+            messages.error(request, f"Error al procesar el archivo Excel: {str(e)}")
+            return redirect('process_excel')
 
-    return render(request, 'Prediccion/cargaExcel.html', {'form': form})
+    return render(request, 'Prediccion/cargaExcel.html')
 
 
 def confirmar_carga(request):

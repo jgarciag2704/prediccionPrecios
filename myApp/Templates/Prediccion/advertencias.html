@@ -19,13 +19,20 @@
     {% csrf_token %}
     
     <div class="form-group">
-      <label for="id_hortaliza">Selecciona una hortaliza:</label>
-      {{ form.hortaliza }}
+      <label for="hortaliza">Selecciona una hortaliza:</label>
+      <select id="hortaliza" name="hortaliza" class="form-control" style="color: black !important; background-color: white !important;">
+        <option value="">-- Selecciona una opción --</option>
+        {% for hortaliza in hortalizas %}
+          <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %} style="color: black !important;">
+            {{ hortaliza.Nombre }}
+          </option>
+        {% endfor %}
+      </select>
     </div>
 
     <div class="form-group">
-      <label for="id_advertencias">Advertencias:</label>
-      {{ form.advertencias }}
+      <label for="advertencias">Advertencias:</label>
+      <textarea id="advertencias" name="advertencias" class="form-control"></textarea>
     </div>
     
     <button type="submit" class="btn btn-primary">Guardar</button>
@@ -34,14 +41,16 @@
   <script type="text/javascript">
     const hortalizasAdvertencias = {{ hortalizas_advertencias|safe }};
     
-    document.getElementById('id_hortaliza').addEventListener('change', function() {
+    // Imprimir en la consola los valores de los nombres de las hortalizas
+    
+    document.getElementById('hortaliza').addEventListener('change', function() {
       const selectedHortalizaId = this.value;
-      const advertenciasField = document.getElementById('id_advertencias');
+      const advertenciasField = document.getElementById('advertencias');
       
       if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
         advertenciasField.value = hortalizasAdvertencias[selectedHortalizaId];
       } else {
-        advertenciasField.value = '';  // Clear if no hortaliza is selected
+        advertenciasField.value = '';  // Limpiar si no hay selección
       }
     });
   </script>

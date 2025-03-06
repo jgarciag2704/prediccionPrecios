@@ -117,10 +117,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # Archivos estáticos del proyecto principal
-    BASE_DIR / 'myApp' / 'static',  # Archivos estáticos de la aplicación 'myApp'
-]
+#STATICFILES_DIRS = [
+    #BASE_DIR / 'static',  # Archivos estáticos del proyecto principal
+    #BASE_DIR / 'myApp' / 'static',  # Archivos estáticos de la aplicación 'myApp'
+#]
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
