@@ -1,58 +1,68 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-  <h1>{{ username }}</h1>
-
-  <h2>Editar Advertencias de Hortaliza</h2>
-
-  {% if messages %}
-    <div class="alert alert-info">
-      <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
-
-  <form method="POST">
-    {% csrf_token %}
-    
-    <div class="form-group">
-      <label for="hortaliza">Selecciona una hortaliza:</label>
-      <select id="hortaliza" name="hortaliza" class="form-control" style="color: black !important; background-color: white !important;">
-        <option value="">-- Selecciona una opción --</option>
-        {% for hortaliza in hortalizas %}
-          <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %} style="color: black !important;">
-            {{ hortaliza.Nombre }}
-          </option>
-        {% endfor %}
-      </select>
+<div class="container mt-5">
+    <!-- Título del usuario -->
+    <div class="text-center mb-4">
+        <h1>{{ username }}</h1>
     </div>
 
-    <div class="form-group">
-      <label for="advertencias">Advertencias:</label>
-      <textarea id="advertencias" name="advertencias" class="form-control"></textarea>
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Guardar</button>
-  </form>
+    <!-- Título de la sección -->
+    <h2 class="mb-4">Editar Advertencias de Hortaliza</h2>
 
-  <script type="text/javascript">
+    <!-- Mensajes de información -->
+    {% if messages %}
+        <div class="alert alert-info">
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="hortaliza">Selecciona una hortaliza:</label>
+                    <select id="hortaliza" name="hortaliza" class="form-control" style="color: black !important; background-color: white !important;">
+                        <option value="">-- Selecciona una opción --</option>
+                        {% for hortaliza in hortalizas %}
+                            <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %} style="color: black !important;">
+                                {{ hortaliza.Nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="advertencias">Advertencias:</label>
+                    <textarea id="advertencias" name="advertencias" class="form-control"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
     const hortalizasAdvertencias = {{ hortalizas_advertencias|safe }};
     
-    // Imprimir en la consola los valores de los nombres de las hortalizas
-    
     document.getElementById('hortaliza').addEventListener('change', function() {
-      const selectedHortalizaId = this.value;
-      const advertenciasField = document.getElementById('advertencias');
-      
-      if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
-        advertenciasField.value = hortalizasAdvertencias[selectedHortalizaId];
-      } else {
-        advertenciasField.value = '';  // Limpiar si no hay selección
-      }
+        const selectedHortalizaId = this.value;
+        const advertenciasField = document.getElementById('advertencias');
+        
+        if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
+            advertenciasField.value = hortalizasAdvertencias[selectedHortalizaId];
+        } else {
+            advertenciasField.value = '';  // Limpiar si no hay selección
+        }
     });
-  </script>
+</script>
 
 {% endblock content %}

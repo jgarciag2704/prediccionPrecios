@@ -1,47 +1,61 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-<h1>Carga de Excel</h1>
 
-<form method="post" enctype="multipart/form-data" id="upload-form">
-    {% csrf_token %}
-    
-    <div class="form-group">
-        <label for="excel_file">Cargar archivo Excel:</label>
-        <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xls,.xlsx" required>
+<div class="container mt-5">
+    <!-- Título -->
+    <div class="text-center mb-4">
+        <h1>Carga de Excel</h1>
     </div>
 
-    <div class="form-group">
-        <label for="option">Seleccionar opción:</label>
-        <select name="option" id="option" class="form-control">
-            <option value="Central de Abasto de León">Central de Abasto de León</option>
-            <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
-        </select>
+    <!-- Formulario -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="excel_file">Cargar archivo Excel:</label>
+                    <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xls,.xlsx" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="option">Seleccionar opción:</label>
+                    <select name="option" id="option" class="form-control">
+                        <option value="Central de Abasto de León">Central de Abasto de León</option>
+                        <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
+                    </select>
+                </div>
+
+                <!-- Botón para subir el archivo -->
+                <button type="submit" id="upload-btn" class="btn btn-primary">Subir archivo</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Botón para subir el archivo -->
-    <button type="submit" id="upload-btn" class="btn btn-primary">Subir archivo</button>
-</form>
+    {% if preview_data %}
+        <!-- Previsualización -->
+        <div class="mt-5">
+            <h2>Previsualización del archivo Excel</h2>
+            <div class="table-responsive">
+                {{ preview_data|safe }}
+            </div>
+            <form method="post" action="{% url 'confirmar_carga' %}">
+                {% csrf_token %}
+                <input type="hidden" name="option" value="{{ option }}">
+                <button type="submit" class="btn btn-success mt-3">Confirmar carga</button>
+            </form>
+        </div>
+    {% endif %}
 
-{% if preview_data %}
-    <h2>Previsualización del archivo Excel</h2>
-    <div class="table-responsive">
-        {{ preview_data|safe }}
-    </div>
-    <form method="post" action="{% url 'confirmar_carga' %}">
-        {% csrf_token %}
-        <input type="hidden" name="option" value="{{ option }}">
-        <button type="submit" class="btn btn-success">Confirmar carga</button>
-    </form>
-{% endif %}
-
-{% if messages %}
-    <div class="alert alert-danger">
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    </div>
-{% endif %}
+    {% if messages %}
+        <div class="alert alert-danger mt-4">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
 
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
