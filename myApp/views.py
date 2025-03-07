@@ -36,12 +36,18 @@ def advertencias(request):
     hortaliza_obj = None  
     advertencias_texto = ""
 
-    # Obtener todas las hortalizas con sus advertencias
+    # Obtener todas las hortalizas con sus advertencias y tiempos de cosecha
     hortalizas = hortaliza.objects.all()
-    hortalizas_advertencias = {hort.id: hort.advertencias for hort in hortalizas}
+    hortalizas_advertencias = {
+        hort.id: {
+            "advertencias": hort.advertencias,
+            "invierno": hort.tiempoCosechaInvierno,
+            "verano": hort.tiempoCosechaVerano
+        } 
+        for hort in hortalizas
+    }
     
-    # Imprimir los datos para depuración
-    print(hortalizas_advertencias)
+    print(hortalizas_advertencias)  # Depuración en consola
 
     if request.method == 'POST':
         hortaliza_id = request.POST.get('hortaliza')
@@ -59,9 +65,18 @@ def advertencias(request):
 
     return render(request, 'Prediccion/advertencias.html', {
         'hortalizas': hortalizas,
-        'hortalizas_advertencias': hortalizas_advertencias
+    'hortalizas_advertencias': json.dumps(hortalizas_advertencias)  # Convertir a JSON seguro
     })
 
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import historicoPrecios, hortaliza
+from django.core.serializers.json import DjangoJSONEncoder
+import pandas as pd
+import json
+from django.utils.dateparse import parse_date
 
 def dashboard(request):
     nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
@@ -69,6 +84,10 @@ def dashboard(request):
     predicciones = []
     presentacion = ""
     mercado = ""
+    mejor_plantacion_verano = None
+    mejor_plantacion_invierno = None
+    tiempoCosechaInvierno = None
+    tiempoCosechaVerano = None
 
     if request.method == 'POST':
         nombre_seleccionado = request.POST.get('nombre')
@@ -77,16 +96,6 @@ def dashboard(request):
 
         fecha_inicio = parse_date(fecha_inicio_str) if fecha_inicio_str else None
         fecha_fin = parse_date(fecha_fin_str) if fecha_fin_str else None
-
-        # Datos de inflación proporcionados
-        inflacion_data = {
-            'ds': ['2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01', '2024-01-01'],
-            'inflacion': [4.83, 2.83, 3.15, 7.36, 7.82, 4.66, 4.21]
-        }
-
-        # Convertir fechas a datetime
-        inflacion_df = pd.DataFrame(inflacion_data)
-        inflacion_df['ds'] = pd.to_datetime(inflacion_df['ds'])
 
         if nombre_seleccionado:
             datos = historicoPrecios.objects.filter(Nombre=nombre_seleccionado)
@@ -109,9 +118,29 @@ def dashboard(request):
                 precios = [{"fecha": fecha.strftime("%Y-%m-%d"), "precioPromedio": precio} for fecha, precio in df['preciopromedio'].items()]
 
                 if not df.empty and len(df) > 10:
-                    #predicciones = prediccion_arima(df)
-                    predicciones = prediccion_prophet(df)#va siendo el mejor hasta el momento
-                    #predicciones =prediccion_lstm(df)
+                    predicciones = prediccion_prophet(df)
+                    
+                    # Identificar la mejor fecha para cosechar en cada temporada
+                    pred_df = pd.DataFrame(predicciones)
+                    pred_df['fecha'] = pd.to_datetime(pred_df['fecha'])
+                    
+                    # Definir rangos de temporadas (verano: junio-agosto, invierno: diciembre-febrero)
+                    verano = pred_df[(pred_df['fecha'].dt.month >= 6) & (pred_df['fecha'].dt.month <= 8)]
+                    invierno = pred_df[(pred_df['fecha'].dt.month == 12) | (pred_df['fecha'].dt.month <= 2)]
+
+                    # Obtener los días de cosecha de la base de datos para cada temporada
+                    hortaliza_seleccionada = hortaliza.objects.filter(Nombre=nombre_seleccionado).first()
+                    
+                    if hortaliza_seleccionada:
+                        tiempoCosechaInvierno = hortaliza_seleccionada.tiempoCosechaInvierno
+                        tiempoCosechaVerano = hortaliza_seleccionada.tiempoCosechaVerano
+
+                    if not verano.empty and tiempoCosechaVerano:
+                        mejor_fecha_verano = verano.loc[verano['precio'].idxmax(), 'fecha']
+                        mejor_plantacion_verano = mejor_fecha_verano - pd.DateOffset(days=tiempoCosechaVerano)
+                    if not invierno.empty and tiempoCosechaInvierno:
+                        mejor_fecha_invierno = invierno.loc[invierno['precio'].idxmax(), 'fecha']
+                        mejor_plantacion_invierno = mejor_fecha_invierno - pd.DateOffset(days=tiempoCosechaInvierno)
 
             # Obtener información adicional
             presentacion = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('Presentacion', flat=True).first() or ""
@@ -124,8 +153,13 @@ def dashboard(request):
         'predicciones': json.dumps(predicciones, cls=DjangoJSONEncoder),
         'presentacion': presentacion,
         'mercado': mercado,
+        'mejor_plantacion_verano': mejor_plantacion_verano.strftime("%Y-%m-%d") if mejor_plantacion_verano else "No disponible",
+        'mejor_plantacion_invierno': mejor_plantacion_invierno.strftime("%Y-%m-%d") if mejor_plantacion_invierno else "No disponible",
+        'tiempoCosechaInvierno': tiempoCosechaInvierno,
+        'tiempoCosechaVerano': tiempoCosechaVerano,
     }
     return render(request, 'Prediccion/dashboard.html', context)
+
 
 def prediccion_prophet(df):
     try:
@@ -158,7 +192,7 @@ def prediccion_prophet(df):
 
         # Generar fechas futuras desde el último punto del dataset
         ultimo_valor = df_prophet['ds'].max()
-        futuro = modelo_prophet.make_future_dataframe(periods=250, freq='D')
+        futuro = modelo_prophet.make_future_dataframe(periods=365, freq='D')
         futuro = futuro[futuro['ds'] > ultimo_valor]
         
         if futuro.empty:
@@ -294,7 +328,7 @@ def process_excel(request):
 
             # Leer el archivo con pandas
             df = pd.read_excel(temp_file.name)
-            preview_data = df.head(50)  # Mostrar solo las primeras 50 filas
+            preview_data = df.head(10)  # Mostrar solo las primeras 50 filas
 
             return render(request, 'Prediccion/cargaExcel.html', {
                 'preview_data': preview_data.to_html(classes='table table-striped'),
@@ -355,7 +389,7 @@ def confirmar_carga(request):
                 )
             
             messages.success(request, "Los datos se han cargado correctamente.")
-            return redirect('dashboard')
+            return redirect('cargaExcel')
         except Exception as e:
             # Capturar cualquier error que ocurra
             messages.error(request, f"Ha ocurrido un error al procesar el archivo Excel: {str(e)}")

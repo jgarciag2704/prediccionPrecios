@@ -38,6 +38,27 @@
         <div class="mt-3">
             <p><strong>Presentación:</strong> {{ presentacion }}</p>
             <p><strong>Mercado:</strong> {{ mercado }}</p>
+            <p><strong>Días de cosecha en Verano:</strong> {{ tiempoCosechaVerano }} días</p>
+            <p><strong>Días de cosecha en Invierno:</strong> {{ tiempoCosechaInvierno }} días</p>
+
+        </div>
+    </div>
+</div>
+
+<!-- Mostrar las mejores fechas de plantación -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="alert alert-info text-center">
+                <h5>Mejor fecha para plantar en <strong>Verano</strong></h5>
+                <p>{{ mejor_plantacion_verano }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="alert alert-primary text-center">
+                <h5>Mejor fecha para plantar en <strong>Invierno</strong></h5>
+                <p>{{ mejor_plantacion_invierno }}</p>
+            </div>
         </div>
     </div>
 </div>

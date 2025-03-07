@@ -1,0 +1,23 @@
+/* Estilo para mensajes de éxito */
+.notifi-success {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+}
+
+/* Estilo para mensajes de error */
+.notifi-danger {
+    background-color: #f44336; /* Rojo */
+    color: white;
+}
+
+/* Estilo para mensajes de información */
+.notifi-info {
+    background-color: #2196F3; /* Azul */
+    color: white;
+}
+
+/* Estilo para mensajes de advertencia */
+.notifi-warning {
+    background-color: #FF9800; /* Naranja */
+    color: white;
+}

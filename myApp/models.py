@@ -6,7 +6,8 @@ from django.core.validators import MinValueValidator
 class hortaliza (models.Model):
     Nombre=models.TextField()
     advertencias = models.TextField(null=True, blank=True)  # Permite valores NULL
-    
+    tiempoCosechaInvierno=models.IntegerField(null=True, blank=True)
+    tiempoCosechaVerano=models.IntegerField(null=True, blank=True)
     def __str__(self):
         return self.Nombre
     

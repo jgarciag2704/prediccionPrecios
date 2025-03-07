@@ -1,16 +1,14 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
+
 <div class="container mt-5">
-    <!-- Título del usuario -->
     <div class="text-center mb-4">
         <h1>{{ username }}</h1>
     </div>
 
-    <!-- Título de la sección -->
     <h2 class="mb-4">Editar Advertencias de Hortaliza</h2>
 
-    <!-- Mensajes de información -->
     {% if messages %}
         <div class="alert alert-info">
             <ul>
@@ -21,13 +19,13 @@
         </div>
     {% endif %}
 
-    <!-- Formulario -->
     <div class="card shadow-sm">
         <div class="card-body">
             <form method="POST">
                 {% csrf_token %}
                 
                 <div class="form-group">
+                    
                     <label for="hortaliza">Selecciona una hortaliza:</label>
                     <select id="hortaliza" name="hortaliza" class="form-control" style="color: black !important; background-color: white !important;">
                         <option value="">-- Selecciona una opción --</option>
@@ -37,6 +35,18 @@
                             </option>
                         {% endfor %}
                     </select>
+                    
+                </div>
+
+                <!-- Labels para mostrar los tiempos de cosecha -->
+                <div class="form-group">
+                    <label for="tiempo_invierno"><strong>Tiempo de Cosecha en Invierno:</strong></label>
+                    <span id="tiempo_invierno">-</span> días
+                </div>
+                
+                <div class="form-group">
+                    <label for="tiempo_verano"><strong>Tiempo de Cosecha en Verano:</strong></label>
+                    <span id="tiempo_verano">-</span> días
                 </div>
 
                 <div class="form-group">
@@ -52,15 +62,22 @@
 
 <script type="text/javascript">
     const hortalizasAdvertencias = {{ hortalizas_advertencias|safe }};
-    
+
     document.getElementById('hortaliza').addEventListener('change', function() {
         const selectedHortalizaId = this.value;
         const advertenciasField = document.getElementById('advertencias');
+        const tiempoInviernoField = document.getElementById('tiempo_invierno');
+        const tiempoVeranoField = document.getElementById('tiempo_verano');
         
         if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
-            advertenciasField.value = hortalizasAdvertencias[selectedHortalizaId];
+            const data = hortalizasAdvertencias[selectedHortalizaId];
+            advertenciasField.value = data.advertencias || '';
+            tiempoInviernoField.textContent = data.invierno || '-';
+            tiempoVeranoField.textContent = data.verano || '-';
         } else {
-            advertenciasField.value = '';  // Limpiar si no hay selección
+            advertenciasField.value = '';
+            tiempoInviernoField.textContent = '-';
+            tiempoVeranoField.textContent = '-';
         }
     });
 </script>
