@@ -56,16 +56,28 @@
 <!-- Mostrar las mejores fechas de plantación -->
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="alert alert-info text-center">
                 <h5>Mejor fecha para plantar en <strong>Verano</strong></h5>
                 <p>{{ mejor_plantacion_verano }}</p>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="alert alert-primary text-center">
                 <h5>Mejor fecha para plantar en <strong>Invierno</strong></h5>
                 <p>{{ mejor_plantacion_invierno }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-success text-center">
+                <h5>Error Cuadrático Medio (MSE)</h5>
+                <p>{{ mse|floatformat:2 }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-warning text-center">
+                <h5>Error Absoluto Medio (MAE)</h5>
+                <p>{{ mae|floatformat:2 }}</p>
             </div>
         </div>
     </div>
@@ -74,18 +86,7 @@
 <!-- Mostrar métricas de evaluación -->
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-6">
-            <div class="alert alert-success text-center">
-                <h5>Error Cuadrático Medio (MSE)</h5>
-                <p>{{ mse|floatformat:2 }}</p>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="alert alert-warning text-center">
-                <h5>Error Absoluto Medio (MAE)</h5>
-                <p>{{ mae|floatformat:2 }}</p>
-            </div>
-        </div>
+        
     </div>
 </div>
 

@@ -366,12 +366,23 @@ def prediccion_lstm(df):
         last_sequence = X_test[-1]
         for _ in range(365):
             next_pred = modelo.predict(last_sequence.reshape(1, seq_length, 1))
-            future_predictions.append(float(scaler.inverse_transform(next_pred)[0][0]))  # Convertir a float
+            future_predictions.append(float(scaler.inverse_transform(next_pred)[0][0]))
 
         future_dates = pd.date_range(start=df.index[-1], periods=365, freq='D')
-        predicciones = [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": float(precio)} for fecha, precio in zip(future_dates, future_predictions)]  # Convertir a float
 
-        return predicciones, float(mse), float(mae)  # Convertir a float
+        # Asumir un intervalo fijo basado en el error estándar
+        error_std = np.std(y_test - y_pred)
+        intervalo_inferior = [precio - 1.645 * error_std for precio in future_predictions]
+        intervalo_superior = [precio + 1.645 * error_std for precio in future_predictions]
+
+        predicciones = [{
+            "fecha": fecha.strftime("%Y-%m-%d"),
+            "precio": float(precio),
+            "min_95": float(min_95),
+            "max_95": float(max_95)
+        } for fecha, precio, min_95, max_95 in zip(future_dates, future_predictions, intervalo_inferior, intervalo_superior)]
+
+        return predicciones, float(mse), float(mae)
     except Exception as e:
         print("Error en LSTM:", e)
         return [], None, None
@@ -379,7 +390,7 @@ def prediccion_lstm(df):
 def prediccion_random_forest(df):
     try:
         # Preparar los datos
-        df['year'] = df.index.year  # Usar df.index en lugar de df['Fecha']
+        df['year'] = df.index.year
         df['month'] = df.index.month
         df['day'] = df.index.day
         df['day_of_week'] = df.index.dayofweek
@@ -403,7 +414,7 @@ def prediccion_random_forest(df):
         mae = mean_absolute_error(y_test, y_pred)
 
         # Predecir para el futuro
-        future_dates = pd.date_range(start=df.index[-1], periods=365, freq='D')  # Usar df.index
+        future_dates = pd.date_range(start=df.index[-1], periods=365, freq='D')
         future_df = pd.DataFrame({
             'year': future_dates.year,
             'month': future_dates.month,
@@ -412,11 +423,22 @@ def prediccion_random_forest(df):
             'day_of_year': future_dates.dayofyear
         })
 
+        # Obtener predicciones y desviación estándar
         future_predictions = modelo.predict(future_df)
+        future_std = np.std([tree.predict(future_df) for tree in modelo.estimators_], axis=0)
 
-        predicciones = [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": round(precio, 2)} for fecha, precio in zip(future_dates, future_predictions)]
+        # Calcular intervalo de confianza del 90%
+        intervalo_inferior = future_predictions - 1.645 * future_std
+        intervalo_superior = future_predictions + 1.645 * future_std
 
-        return predicciones, mse, mae
+        predicciones = [{
+            "fecha": fecha.strftime("%Y-%m-%d"),
+            "precio": float(precio),
+            "min_95": float(min_95),
+            "max_95": float(max_95)
+        } for fecha, precio, min_95, max_95 in zip(future_dates, future_predictions, intervalo_inferior, intervalo_superior)]
+
+        return predicciones, float(mse), float(mae)
     except Exception as e:
         print("Error en Random Forest:", e)
         return [], None, None
@@ -457,11 +479,29 @@ def prediccion_xgboost(df):
             'day_of_year': future_dates.dayofyear
         })
 
+        # Obtener predicciones
         future_predictions = modelo.predict(future_df)
 
-        predicciones = [{"fecha": fecha.strftime("%Y-%m-%d"), "precio": float(precio)} for fecha, precio in zip(future_dates, future_predictions)]  # Convertir a float
+        # Calcular la desviación estándar de las predicciones
+        # Usamos `pred_contribs=True` para obtener las contribuciones de cada árbol
+        contribuciones = modelo.get_booster().predict(xgb.DMatrix(future_df), pred_contribs=True)
+        # Las contribuciones de cada árbol están en las columnas 1 a n (la columna 0 es el bias)
+        contribuciones_arboles = contribuciones[:, 1:]
+        # Calcular la desviación estándar de las contribuciones
+        future_std = np.std(contribuciones_arboles, axis=1)
 
-        return predicciones, float(mse), float(mae)  # Convertir a float
+        # Calcular intervalo de confianza del 90%
+        intervalo_inferior = future_predictions - 1.645 * future_std
+        intervalo_superior = future_predictions + 1.645 * future_std
+
+        predicciones = [{
+            "fecha": fecha.strftime("%Y-%m-%d"),
+            "precio": float(precio),
+            "min_95": float(min_95),
+            "max_95": float(max_95)
+        } for fecha, precio, min_95, max_95 in zip(future_dates, future_predictions, intervalo_inferior, intervalo_superior)]
+
+        return predicciones, float(mse), float(mae)
     except Exception as e:
         print("Error en XGBoost:", e)
         return [], None, None
