@@ -9,7 +9,7 @@
         <form method="POST">
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="nombreSelect">Selecciona un producto:</label>
                     <select id="nombreSelect" name="nombre" class="form-control" onchange="this.form.submit()">
                         <option value="">-- Selecciona --</option>
@@ -20,15 +20,24 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="fecha_inicio">Desde:</label>
                     <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
                            value="{{ request.POST.fecha_inicio }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="fecha_fin">Hasta:</label>
                     <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
                            value="{{ request.POST.fecha_fin }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="modeloSelect">Selecciona un modelo:</label>
+                    <select id="modeloSelect" name="modelo" class="form-control">
+                        <option value="prophet" {% if request.POST.modelo == "prophet" %}selected{% endif %}>Prophet</option>
+                        <option value="random_forest" {% if request.POST.modelo == "random_forest" %}selected{% endif %}>Random Forest</option>
+                        <option value="lstm" {% if request.POST.modelo == "lstm" %}selected{% endif %}>LSTM</option>
+                        <option value="xgboost" {% if request.POST.modelo == "xgboost" %}selected{% endif %}>XGBoost</option>
+                    </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -40,7 +49,6 @@
             <p><strong>Mercado:</strong> {{ mercado }}</p>
             <p><strong>Días de cosecha en Verano:</strong> {{ tiempoCosechaVerano }} días</p>
             <p><strong>Días de cosecha en Invierno:</strong> {{ tiempoCosechaInvierno }} días</p>
-
         </div>
     </div>
 </div>
@@ -63,10 +71,28 @@
     </div>
 </div>
 
+<!-- Mostrar métricas de evaluación -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="alert alert-success text-center">
+                <h5>Error Cuadrático Medio (MSE)</h5>
+                <p>{{ mse|floatformat:2 }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="alert alert-warning text-center">
+                <h5>Error Absoluto Medio (MAE)</h5>
+                <p>{{ mae|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Sección del gráfico -->
 <div class="container-fluid mt-4">
     <figure class="highcharts-figure">
-        <div id="container" style="height: 500px;"></div>  <!-- Aumentado a 600px -->
+        <div id="container" style="height: 500px;"></div>
     </figure>
 </div>
 
