@@ -1,23 +1,115 @@
-/* Estilo para mensajes de éxito */
-.notifi-success {
-    background-color: #4CAF50; /* Verde */
-    color: white;
+/* Contenedor principal */
+.container {
+    font-family: 'Arial', sans-serif;
+    color: #004d00; /* Verde oscuro */
 }
 
-/* Estilo para mensajes de error */
-.notifi-danger {
-    background-color: #f44336; /* Rojo */
-    color: white;
+/* Tarjeta principal */
+.card {
+    border: 2px solid #007b00;
+    border-radius: 12px;
+    background: #f8fff8; /* Verde muy claro */
 }
 
-/* Estilo para mensajes de información */
-.notifi-info {
-    background-color: #2196F3; /* Azul */
-    color: white;
+/* Títulos */
+h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #007b00;
 }
 
-/* Estilo para mensajes de advertencia */
-.notifi-warning {
-    background-color: #FF9800; /* Naranja */
-    color: white;
+/* Etiquetas */
+.form-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007b00;
 }
+
+/* Inputs y selects */
+.form-control, .form-select {
+    height: 45px;
+    border: 2px solid #007b00;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 16px;
+    color: #004d00;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #004d00;
+    box-shadow: 0 0 5px #007b00;
+}
+
+/* Botón */
+.btn-primary {
+    background-color: #007b00;
+    border: 2px solid #007b00;
+    font-size: 18px;
+    font-weight: bold;
+    transition: 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #005a00;
+    border-color: #004d00;
+}
+
+/* Slider */
+.form-range {
+    width: 100%;
+    height: 12px;
+    background: #ddd;
+    border-radius: 10px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 30px;
+    height: 30px;
+    background: #007b00;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.form-range::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    background: #007b00;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Texto flotante del slider */
+.range-value {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 15px;
+    background: white;
+    color: #007b00;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid #007b00;
+    text-align: center;
+    min-width: 50px;
+    max-width: 110px;
+    pointer-events: none;
+    transition: left 0.1s ease-out;
+}
+
+/* Contenedor de información */
+.bg-light {
+    border: 2px solid #007b00;
+    background: #f8fff8;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #004d00;
+}
+

@@ -101,6 +101,7 @@ def dashboard(request):
     mejor_plantacion_invierno = None
     tiempoCosechaInvierno = None
     tiempoCosechaVerano = None
+    diasAPredecir= None
     mse = None  # Inicializar mse
     mae = None  # Inicializar mae
 
@@ -109,8 +110,15 @@ def dashboard(request):
         fecha_inicio_str = request.POST.get('fecha_inicio', '')
         fecha_fin_str = request.POST.get('fecha_fin', '')
         modelo_seleccionado = request.POST.get('modelo', 'prophet')  # Nuevo campo para seleccionar el modelo
-
-
+        diasAPredecir=request.POST.get('diasAPredecir')
+        if diasAPredecir is not None:
+            try:
+                diasAPredecir = int(diasAPredecir)
+            except ValueError:
+                diasAPredecir = 150 # Valor predeterminado si no es un número válido
+        else:
+            diasAPredecir = 150
+            
         fecha_inicio = parse_date(fecha_inicio_str) if fecha_inicio_str else None
         fecha_fin = parse_date(fecha_fin_str) if fecha_fin_str else None
 
@@ -135,7 +143,7 @@ def dashboard(request):
                 precios = [{"fecha": fecha.strftime("%Y-%m-%d"), "precioPromedio": precio} for fecha, precio in zip(df.index, df['preciopromedio'])]
                 if not df.empty and len(df) > 10:
                     if modelo_seleccionado == 'prophet':
-                        predicciones, mse, mae = prediccion_prophet(df)
+                        predicciones, mse, mae = prediccion_prophet(df,diasAPredecir)
                     elif modelo_seleccionado == 'arima':
                         predicciones, mse, mae = prediccion_arima(df)
                     elif modelo_seleccionado == 'random_forest':
@@ -190,11 +198,12 @@ def dashboard(request):
         'tiempoCosechaVerano': tiempoCosechaVerano,
         'mse': float(mse) if mse is not None else None,  
         'mae': float(mae) if mae is not None else None,
+        'diasAPredecir':diasAPredecir,
     }
     return render(request, 'Prediccion/dashboard.html', context)
 
 
-def prediccion_prophet(df):
+def prediccion_prophet(df,diasAPredecir):
     try:
         # Preparar los datos para Prophet
         df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
@@ -261,7 +270,7 @@ def prediccion_prophet(df):
 
         # Generar fechas futuras desde el último punto del dataset
         ultimo_valor = df_prophet['ds'].max()
-        futuro = modelo_prophet.make_future_dataframe(periods=300, freq='D')
+        futuro = modelo_prophet.make_future_dataframe(periods=diasAPredecir, freq='D')
         futuro = futuro[futuro['ds'] > ultimo_valor]
         
         if futuro.empty:
