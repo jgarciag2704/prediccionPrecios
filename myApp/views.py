@@ -220,11 +220,11 @@ def prediccion_prophet(df):
 
             modelo_prophet = Prophet(
                 changepoint_prior_scale=0.05,
-                seasonality_prior_scale=10.0,  # Ajustar este parámetro
+                seasonality_prior_scale=10.0,  
                 yearly_seasonality=True,
                 weekly_seasonality=True,
                 daily_seasonality=False,
-                interval_width=0.90
+                interval_width=0.95
             )
 
             modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=7)
@@ -261,7 +261,7 @@ def prediccion_prophet(df):
 
         # Generar fechas futuras desde el último punto del dataset
         ultimo_valor = df_prophet['ds'].max()
-        futuro = modelo_prophet.make_future_dataframe(periods=730, freq='D')
+        futuro = modelo_prophet.make_future_dataframe(periods=300, freq='D')
         futuro = futuro[futuro['ds'] > ultimo_valor]
         
         if futuro.empty:
