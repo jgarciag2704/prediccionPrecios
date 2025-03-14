@@ -23,6 +23,11 @@ from sklearn.ensemble import RandomForestRegressor  # Para Random Forest
 import xgboost as xgb  # Para XGBoost
 from sklearn.model_selection import train_test_split  # Para dividir datos
 from sklearn.metrics import mean_squared_error, mean_absolute_error 
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.preprocessing import StandardScaler
+from django.db.models import Count
+from datetime import datetime
 
 # Create your views here.
 
@@ -80,7 +85,14 @@ def advertencias(request):
 
 
 def dashboard(request):
-    nombres = historicoPrecios.objects.values_list('Nombre', flat=True).distinct()
+    nombres = (
+            historicoPrecios.objects
+            .values('Nombre')
+            .annotate(count=Count('id'))
+            .filter(count__gte=800)
+            .values_list('Nombre', flat=True)
+            .distinct()
+        )    
     precios = []
     predicciones = []
     presentacion = ""
@@ -150,13 +162,16 @@ def dashboard(request):
                         if hortaliza_seleccionada:
                             tiempoCosechaInvierno = hortaliza_seleccionada.tiempoCosechaInvierno
                             tiempoCosechaVerano = hortaliza_seleccionada.tiempoCosechaVerano
-
+                        ano_actual=datetime.now().year
                         if not verano.empty and tiempoCosechaVerano:
                             mejor_fecha_verano = verano.loc[verano['precio'].idxmax(), 'fecha']
                             mejor_plantacion_verano = mejor_fecha_verano - pd.DateOffset(days=tiempoCosechaVerano)
+                            mejor_plantacion_verano = mejor_plantacion_verano.replace(year=ano_actual)
+
                         if not invierno.empty and tiempoCosechaInvierno:
                             mejor_fecha_invierno = invierno.loc[invierno['precio'].idxmax(), 'fecha']
                             mejor_plantacion_invierno = mejor_fecha_invierno - pd.DateOffset(days=tiempoCosechaInvierno)
+                            mejor_plantacion_invierno = mejor_plantacion_invierno.replace(year=ano_actual)
 
             # Obtener información adicional
             presentacion = historicoPrecios.objects.filter(Nombre=nombre_seleccionado).values_list('Presentacion', flat=True).first() or ""
@@ -246,7 +261,7 @@ def prediccion_prophet(df):
 
         # Generar fechas futuras desde el último punto del dataset
         ultimo_valor = df_prophet['ds'].max()
-        futuro = modelo_prophet.make_future_dataframe(periods=365, freq='D')
+        futuro = modelo_prophet.make_future_dataframe(periods=730, freq='D')
         futuro = futuro[futuro['ds'] > ultimo_valor]
         
         if futuro.empty:
@@ -320,10 +335,10 @@ def prediccion_arima(df):
 
 def prediccion_lstm(df):
     try:
-        # Preparar los datos
+        # Normalizar los datos con MinMaxScaler
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_data = scaler.fit_transform(df['preciopromedio'].values.reshape(-1, 1))
-
+        
         # Crear secuencias de datos
         def create_sequences(data, seq_length):
             X, y = [], []
@@ -331,61 +346,70 @@ def prediccion_lstm(df):
                 X.append(data[i:i+seq_length])
                 y.append(data[i+seq_length])
             return np.array(X), np.array(y)
-
+        
         seq_length = 60
         X, y = create_sequences(scaled_data, seq_length)
-
+        
         # Dividir los datos en entrenamiento y prueba
         train_size = int(len(X) * 0.8)
         X_train, X_test = X[:train_size], X[train_size:]
         y_train, y_test = y[:train_size], y[train_size:]
-
+        
         # Construir el modelo LSTM
         modelo = Sequential()
         modelo.add(LSTM(50, return_sequences=True, input_shape=(seq_length, 1)))
         modelo.add(LSTM(50, return_sequences=False))
         modelo.add(Dense(25))
         modelo.add(Dense(1))
-
+        
         modelo.compile(optimizer='adam', loss='mean_squared_error')
-
-        # Entrenar el modelo
-        modelo.fit(X_train, y_train, batch_size=1, epochs=1)
-
+        
+        # Entrenar el modelo con EarlyStopping
+        early_stop = EarlyStopping(monitor='loss', patience=5, restore_best_weights=True)
+        modelo.fit(X_train, y_train, batch_size=16, epochs=50, callbacks=[early_stop])
+        
         # Predecir
         y_pred = modelo.predict(X_test)
         y_pred = scaler.inverse_transform(y_pred)
         y_test = scaler.inverse_transform(y_test.reshape(-1, 1))
-
+        
         # Calcular métricas
         mse = mean_squared_error(y_test, y_pred)
         mae = mean_absolute_error(y_test, y_pred)
-
+        
         # Predecir para el futuro
         future_predictions = []
-        last_sequence = X_test[-1]
+        last_sequence = scaled_data[-seq_length:].reshape(1, seq_length, 1)  # Última secuencia real
+        
         for _ in range(365):
-            next_pred = modelo.predict(last_sequence.reshape(1, seq_length, 1))
-            future_predictions.append(float(scaler.inverse_transform(next_pred)[0][0]))
-
+            next_pred = modelo.predict(last_sequence)
+            next_pred_real = scaler.inverse_transform(next_pred.reshape(-1, 1))[0][0]  # Desnormalizar
+            future_predictions.append(next_pred_real)
+            
+            # Actualizar secuencia con el nuevo valor manteniendo la forma correcta
+            next_pred_scaled = scaler.transform(next_pred.reshape(-1, 1))
+            last_sequence = np.append(last_sequence[:, 1:, :], next_pred_scaled.reshape(1, 1, 1), axis=1)
+        
         future_dates = pd.date_range(start=df.index[-1], periods=365, freq='D')
-
-        # Asumir un intervalo fijo basado en el error estándar
+        
+        # Calcular intervalo de confianza
         error_std = np.std(y_test - y_pred)
         intervalo_inferior = [precio - 1.645 * error_std for precio in future_predictions]
         intervalo_superior = [precio + 1.645 * error_std for precio in future_predictions]
-
+        
         predicciones = [{
             "fecha": fecha.strftime("%Y-%m-%d"),
             "precio": float(precio),
             "min_95": float(min_95),
             "max_95": float(max_95)
         } for fecha, precio, min_95, max_95 in zip(future_dates, future_predictions, intervalo_inferior, intervalo_superior)]
-
+        
         return predicciones, float(mse), float(mae)
     except Exception as e:
         print("Error en LSTM:", e)
         return [], None, None
+
+
     
 def prediccion_random_forest(df):
     try:
