@@ -2,13 +2,14 @@
 {% load static %}
 {% block content %}
 <br>
-<br>
 <h2 class="mb-4">PREDICCION DE PRECIOS</h2>
 <div class="container mt-5">
     <div class="card shadow-lg p-4">
+        <!-- Formulario en una sola línea -->
         <form method="POST">
             {% csrf_token %}
             <div class="row g-3 align-items-end">
+                <!-- Selección de producto -->
                 <div class="col-md-3">
                     <label for="nombreSelect" class="form-label fw-bold">Selecciona un producto:</label>
                     <select id="nombreSelect" name="nombre" class="form-select" onchange="this.form.submit()">
@@ -21,7 +22,8 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <!-- Selección de modelo -->
+                <div class="col-md-2">
                     <label for="modeloSelect" class="form-label fw-bold">Selecciona un modelo:</label>
                     <select id="modeloSelect" name="modelo" class="form-select">
                         <option value="prophet" {% if request.POST.modelo == "prophet" %}selected{% endif %}>Prophet</option>
@@ -31,25 +33,46 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
-                    <label for="rangeInput" class="form-label fw-bold">Selecciona los días a predecir:</label>
-                    <div class="position-relative">
-                        <input type="range" id="rangeInput" name="diasAPredecir" min="50" max="1000" step="10" value="{{ diasAPredecir }}" class="form-range">
-                        <span id="rangeValue" class="range-value">{{ diasAPredecir }}</span>
+                <!-- Rango de días a predecir -->
+                <div class="col-md-5">
+                    <div class="d-flex flex-column h-100 justify-content-end">
+                        <label for="rangeInput" class="form-label fw-bold">Selecciona los días a predecir:</label>
+                        <div class="position-relative">
+                            <input type="range" id="rangeInput" name="diasAPredecir" min="50" max="1000" step="10" value="{{ diasAPredecir }}" class="form-range">
+                            <span id="rangeValue" class="range-value">{{ diasAPredecir }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="col-md-2 d-grid">
+                <!-- Botón de filtrar -->
+                <div class="col-md-1 d-grid">
                     <button type="submit" class="btn btn-primary btn-lg fw-bold">Filtrar</button>
                 </div>
             </div>
         </form>
 
-        <div class="mt-4 p-3 bg-light rounded shadow-sm">
-            <p class="mb-2"><strong>Presentación:</strong> {{ presentacion }}</p>
-            <p class="mb-2"><strong>Mercado:</strong> {{ mercado }}</p>
-            <p class="mb-2"><strong>Días de cosecha en Verano:</strong> {{ tiempoCosechaVerano }} días</p>
-            <p class="mb-0"><strong>Días de cosecha en Invierno:</strong> {{ tiempoCosechaInvierno }} días</p>
+        <!-- Apartado de presentación y demás en una sola línea -->
+        <div class="row mt-4 g-3">
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <p class="mb-2"><strong>Presentación:</strong> {{ presentacion }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <p class="mb-2"><strong>Mercado:</strong> {{ mercado }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <p class="mb-2"><strong>Días de cosecha en Verano:</strong> {{ tiempoCosechaVerano }} días</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <p class="mb-0"><strong>Días de cosecha en Invierno:</strong> {{ tiempoCosechaInvierno }} días</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
