@@ -25,20 +25,17 @@
                 {% csrf_token %}
                 
                 <div class="form-group">
-                    
                     <label for="hortaliza">Selecciona una hortaliza:</label>
-                    <select id="hortaliza" name="hortaliza" class="form-control" style="color: black !important; background-color: white !important;">
+                    <select id="hortaliza" name="hortaliza" class="form-control">
                         <option value="">-- Selecciona una opción --</option>
                         {% for hortaliza in hortalizas %}
-                            <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %} style="color: black !important;">
+                            <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %}>
                                 {{ hortaliza.Nombre }}
                             </option>
                         {% endfor %}
                     </select>
-                    
                 </div>
 
-                <!-- Labels para mostrar los tiempos de cosecha -->
                 <div class="form-group">
                     <label for="tiempo_invierno"><strong>Tiempo de Cosecha en Invierno:</strong></label>
                     <span id="tiempo_invierno">-</span> días

@@ -1,66 +1,82 @@
-{% extends 'layouts/base.html' %} {% block content %}
+{% extends 'layouts/base.html' %} 
+{% load static %}
+{% block content %}
 
-<div class="container mt-5">
+<div class="custom-container mt-5"> <!-- Contenedor fluido (100% de ancho) -->
   <!-- Título -->
   <div class="text-center mb-4">
     <h1>Carga de Excel</h1>
   </div>
 
-  <!-- Formulario -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="post" enctype="multipart/form-data" id="upload-form">
-        {% csrf_token %}
+  <div class="row">
+    <!-- Formulario -->
+    <div class="col-md-4 d-flex"> <!-- Añadido d-flex para igualar la altura -->
+      <div class="card shadow-sm h-100 w-100"> <!-- Añadido h-100 y w-100 -->
+        <div class="card-body d-flex flex-column"> <!-- Añadido d-flex y flex-column -->
+          <form method="post" enctype="multipart/form-data" id="upload-form" class="flex-grow-1"> <!-- Añadido flex-grow-1 -->
+            {% csrf_token %}
 
-        <div class="form-group">
-          <label for="excel_file">Cargar archivo Excel:</label>
-          <input
-            type="file"
-            name="excel_file"
-            id="excel_file"
-            class="form-control"
-            accept=".xls,.xlsx"
-            required
-          />
+            <div class="form-group">
+              <label for="excel_file">Cargar archivo Excel:</label>
+              <input
+                type="file"
+                name="excel_file"
+                id="excel_file"
+                class="form-control"
+                accept=".xls,.xlsx"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="option">Seleccionar opción:</label>
+              <select name="option" id="option" class="form-control">
+                <option value="Central de Abasto de León">Central de Abasto de León</option>
+                <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
+                <option value="Central de Abasto de Morelia">Central de Abasto de Morelia</option>
+              </select>
+            </div>
+
+            <!-- Botón para subir el archivo -->
+            <button type="submit" id="upload-btn" class="btn btn-primary w-100">Subir archivo</button>
+          </form>
         </div>
+      </div>
+    </div>
 
-        <div class="form-group">
-          <label for="option">Seleccionar opción:</label>
-          <select name="option" id="option" class="form-control">
-            <option value="Central de Abasto de León">
-              Central de Abasto de León
-            </option>
-            <option value="Central de Abasto de Celaya">
-              Central de Abasto de Celaya
-            </option>
-            <option value="Central de Abasto de Morelia">
-              Central de Abasto de Morelia
-            </option>
-          </select>
+    <!-- Previsualización -->
+    <div class="col-md-8 d-flex"> <!-- Añadido d-flex para igualar la altura -->
+      <div class="card shadow-sm h-100 w-100"> <!-- Añadido h-100 y w-100 -->
+        <div class="card-body d-flex flex-column"> <!-- Añadido d-flex y flex-column -->
+          <h2>Previsualización del archivo Excel</h2>
+          <div class="table-responsive flex-grow-1"> <!-- Añadido flex-grow-1 -->
+            {% if preview_data %}
+              {{ preview_data|safe }} <!-- Muestra la previsualización si hay datos -->
+            {% else %}
+              <div class="text-center">
+                <img 
+                  src="{% static 'assets/img/propias/cargaArchivo.png' %}" 
+                  alt="Carga de archivo" 
+                  class="img-fluid"
+                  width="600"
+                  height="auto" 
+                />
+              </div>
+            {% endif %}
+          </div>
+          {% if preview_data %} <!-- Solo muestra el botón de confirmar si hay previsualización -->
+            <form method="post" action="{% url 'confirmar_carga' %}">
+              {% csrf_token %}
+              <input type="hidden" name="option" value="{{ option }}" />
+              <button type="submit" class="btn btn-success mt-3 w-100">Confirmar carga</button>
+            </form>
+          {% endif %}
         </div>
-
-        <!-- Botón para subir el archivo -->
-        <button type="submit" id="upload-btn" class="btn btn-primary">
-          Subir archivo
-        </button>
-      </form>
+      </div>
     </div>
   </div>
 
-  {% if preview_data %}
-  <!-- Previsualización -->
-  <div class="mt-5">
-    <h2>Previsualización del archivo Excel</h2>
-    <div class="table-responsive">{{ preview_data|safe }}</div>
-    <form method="post" action="{% url 'confirmar_carga' %}">
-      {% csrf_token %}
-      <input type="hidden" name="option" value="{{ option }}" />
-      <button type="submit" class="btn btn-success mt-3">
-        Confirmar carga
-      </button>
-    </form>
-  </div>
-  {% endif %} {% if messages %}
+  {% if messages %}
   <div class="alert mt-4">
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
@@ -69,6 +85,5 @@
   {% endif %}
 </div>
 
-{% block extra_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-{% endblock %} {% endblock content %}
+
+{% endblock content %}
