@@ -31,16 +31,15 @@
     .navbar-nav .nav-link {
       font-size: 1.8rem; /* Aumenta el tamaño de la fuente */
       font-weight: 500;
-      color:#256060 !important; /* Cambia el color de las letras a rojo */
+      color:#06402b !important; /* Cambia el color de las letras a rojo */
     }
   
     /* Centrar los enlaces del navbar perfectamente */
     #navmenu {
       display: flex;
-      justify-content: flex-start; /* Cambié 'space-between' a 'flex-start' */
-      align-items: center; /* Alinea los elementos verticalmente */
+      justify-content: flex-start;
+      align-items: center;
       width: 100%;
-     /* margin-left: -50px;*/
     }
   
     /* Asegurarse de que los enlaces estén perfectamente centrados */
@@ -58,30 +57,127 @@
   
     /* Eliminar espacio entre el logo y los enlaces */
     .navbar-nav .nav-item {
-      margin-left: 10px;  /* Espacio entre el logo y los enlaces */
+      margin-left: 10px;
     }
   
     .navbar-brand {
-      margin-right: 10px; /* Ajuste para reducir el espacio entre el logo y los enlaces */
+      margin-right: 10px;
+    }
+
+    /* Estilos responsive para el navbar */
+    @media (max-width: 992px) {
+      .navbar-nav .nav-link {
+        font-size: 1.4rem;
+        padding: 0.5rem 1rem;
+      }
+      
+      .navbar-brand img {
+        width: 50px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-nav {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .navbar-nav .nav-item {
+        margin-left: 0;
+        margin-bottom: 5px;
+      }
+      
+      .navbar-nav .nav-link {
+        font-size: 1.2rem;
+      }
+      
+      #navbarNav {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 5px;
+      }
+      
+      .navbar-toggler {
+        margin-left: auto;
+      }
+    }
+
+    /* Estilos para el contenedor de texto en el carrusel */
+    .hero-text-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      z-index: 10;
+    }
+
+    @media (min-width: 768px) {
+      .hero-text-container {
+        width: 80%;
+      }
+    }
+
+    .hero-text-content {
+      background-color: rgba(128, 128, 128, 0.2);
+      padding: 1.5rem;
+      border-radius: 70px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 576px) {
+      .hero-text-content {
+        padding: 1rem;
+        border-radius: 40px;
+      }
+      
+      .hero-text-content h2 {
+        font-size: 1.5rem;
+      }
+      
+      .hero-text-content h5 {
+        font-size: 1rem;
+      }
+      
+      .hero-text-content .btn {
+        font-size: 1rem !important;
+        padding: 0.5rem 1rem !important;
+      }
+    }
+
+    /* Asegurar que el carrusel ocupe siempre toda la pantalla */
+    .carousel, .carousel-inner, .carousel-item {
+      height: 100vh;
+    }
+
+    .carousel-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   </style>
-  
 </head>
 
 <body class="index-page">
   <!-- Header / Navbar fuera del contenedor del hero -->
   <header id="header" class="header d-flex align-items-center fixed-top w-100">
     <nav id="navmenu" class="navbar navbar-expand-lg navbar-light w-100">
-      <!-- Logo alineado a la izquierda -->
-      
-  
+      <!-- Botón toggler para móviles -->
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
       <!-- Navbar links -->
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav mx-auto"> <!-- 'mx-auto' para centrar los elementos -->
+        <ul class="navbar-nav mx-auto">
           <li class="nav-item">
             <a class="navbar-brand" href="{% url 'index' %}">
               <img src="{% static 'assets/img/propias/logo claro.png' %}" alt="Logo" style="width: 70px;">
-            </a>          </li>
+            </a>
+          </li>
           <li class="nav-item">
             <a class="nav-link active" href="{% url 'index' %}">Inicio</a>
           </li>
@@ -106,27 +202,63 @@
   <main class="main">
     <!-- Hero Section (Carousel) -->
     <section id="hero" class="hero section dark-background" style="height: 100vh">
-      <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-        <ol class="carousel-indicators">
-          <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
-          <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-          <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-        </ol>
-        <div class="carousel-inner">
-          <!-- Primera imagen -->
-          <div class="carousel-item active">
+      <div id="carouselExampleIndicators" class="carousel slide h-100" data-ride="carousel">
+        <div class="carousel-inner h-100">
+          <div class="carousel-item active h-100">
             <img src="{% static 'assets/img/propias/bg.png' %}" class="d-block w-100" alt="..."
-              style="object-fit: cover; height: 100vh" />
+              style="object-fit: cover; height: 100%" />
           </div>
-          <!-- Segunda imagen -->
-          <div class="carousel-item">
+          <div class="carousel-item h-100">
             <img src="{% static 'assets/img/propias/bg2.jpg' %}" class="d-block w-100" alt="..."
-              style="object-fit: cover; height: 100vh" />
+              style="object-fit: cover; height: 100%" />
           </div>
-          <!-- Tercera imagen -->
-          <div class="carousel-item">
+          <div class="carousel-item h-100">
             <img src="{% static 'assets/img/propias/bg3.jpg' %}" class="d-block w-100" alt="..."
-              style="object-fit: cover; height: 100vh" />
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg4.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg5.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg6.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg7.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg8.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg9.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg10.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg11.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg12.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg13.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
+          </div>
+          <div class="carousel-item h-100">
+            <img src="{% static 'assets/img/propias/bg14.jpg' %}" class="d-block w-100" alt="..."
+              style="object-fit: cover; height: 100%" />
           </div>
         </div>
         <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
@@ -140,26 +272,19 @@
       </div>
 
       <!-- Contenedor centrado dentro del carrusel -->
-      <div class="container d-flex flex-column justify-content-center align-items-center text-center" style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 100vh;
-            z-index: 10;
-          ">
-        <h2 data-aos="fade-up" data-aos-delay="100" style="color: #256060;font-weight: bold;">
-          Análisis y Predicción de Precios en el Mercado Agrícola.
-        </h2>
-        <h5 data-aos="fade-up" data-aos-delay="200" style="color: #256060;font-weight: bold;">
-          Datos precisos para decisiones inteligentes
-        </h5>
-        <div class="d-flex justify-content-center mt-3" data-aos="fade-up" data-aos-delay="300">
-          <a href="{% url 'about' %}" class="btn btn-warning text-white px-4 py-2 rounded-pill shadow-lg" style="background-color: #256060;font-size: 1.3rem;font-weight: bold;
-              ">
-            ¿QUIÉNES SOMOS?
-          </a>
+      <div class="hero-text-container">
+        <div class="hero-text-content">
+          <h2 data-aos="fade-up" data-aos-delay="100" style="color: #000000; font-weight: bold;">
+            Análisis y Predicción de Precios en el Mercado Agrícola.
+          </h2>
+          <h5 data-aos="fade-up" data-aos-delay="200" style="color: #000000;">
+            Datos precisos para decisiones inteligentes
+          </h5>
+          <div class="d-flex justify-content-center mt-3" data-aos="fade-up" data-aos-delay="300">
+            <a href="{% url 'about' %}" class="btn btn-warning text-white px-4 py-2 rounded-pill shadow-lg" style="background-color: #ff9100;font-size: 1.3rem; color:#000000">
+              ¿QUIÉNES SOMOS?
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -169,6 +294,14 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+  <script>
+    // Asegurar que el navbar se cierre al hacer clic en un enlace en dispositivos móviles
+    $(document).ready(function() {
+      $('.navbar-nav>li>a').on('click', function(){
+        $('.navbar-collapse').collapse('hide');
+      });
+    });
+  </script>
 </body>
-
 </html>
