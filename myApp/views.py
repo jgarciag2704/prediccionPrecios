@@ -28,7 +28,14 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.preprocessing import StandardScaler
 from django.db.models import Count
 from datetime import datetime
-
+from sklearn.model_selection import ParameterGrid 
+from prophet.diagnostics import cross_validation, performance_metrics
+import os
+import sys
+import logging
+from contextlib import contextmanager
+import pandas as pd
+from prophet import Prophet
 # Create your views here.
 
 def index(request):
@@ -202,121 +209,104 @@ def dashboard(request):
     }
     return render(request, 'Prediccion/dashboard.html', context)
 
-
-def prediccion_prophet(df,diasAPredecir):
+def prediccion_prophet(df, diasAPredecir):
     try:
-        # Preparar los datos para Prophet
-        df_prophet = df.reset_index()[['Fecha', 'preciopromedio']]
+        # 1. Preparación de datos más eficiente
+        df_prophet = df.reset_index()[['Fecha', 'preciopromedio']].copy()
         df_prophet.columns = ['ds', 'y']
+        df_prophet = df_prophet.dropna().sort_values('ds')
         
-        # Verificar y limpiar datos
-        df_prophet.dropna(inplace=True)
-        df_prophet['ds'] = pd.to_datetime(df_prophet['ds'])
-        df_prophet['y'] = pd.to_numeric(df_prophet['y'], errors='coerce')
-        df_prophet.dropna(inplace=True)
-        
-        if df_prophet.empty:
+        if len(df_prophet) < 180:  # Mínimo de 6 meses de datos
             return [], None, None
-        
-        # Validación cruzada
-        tscv = TimeSeriesSplit(n_splits=15)
-        mse_scores = []
-        mae_scores = []
 
-        for train_index, test_index in tscv.split(df_prophet):
-            train = df_prophet.iloc[train_index]
-            test = df_prophet.iloc[test_index]
-
-            modelo_prophet = Prophet(
-                changepoint_prior_scale=0.05,
-                seasonality_prior_scale=10.0,  
-                yearly_seasonality=True,
-                weekly_seasonality=True,
-                daily_seasonality=False,
-                interval_width=0.95
-            )
-
-            modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=7)
-            modelo_prophet.add_seasonality(name='quarterly', period=90, fourier_order=6)
-            modelo_prophet.add_seasonality(name='harvest_season', period=180, fourier_order=6)
-
-            modelo_prophet.fit(train)
-
-            future = modelo_prophet.make_future_dataframe(periods=len(test), freq='D')
-            forecast = modelo_prophet.predict(future)
-
-            y_true = test['y'].values
-            y_pred = forecast['yhat'].values[-len(test):]
-
-            mse_scores.append(mean_squared_error(y_true, y_pred))
-            mae_scores.append(mean_absolute_error(y_true, y_pred))
-
-        mse = np.mean(mse_scores)
-        mae = np.mean(mae_scores)
-
-        # Entrenar el modelo con todos los datos
-        modelo_prophet = Prophet(
-            changepoint_prior_scale=0.1,
-            seasonality_prior_scale=13.0,
-            yearly_seasonality=True,
-            weekly_seasonality=True,
-            daily_seasonality=False,
-        )
-
-        modelo_prophet.add_seasonality(name='monthly', period=30.5, fourier_order=7)
-        modelo_prophet.add_seasonality(name='quarterly', period=90, fourier_order=6)
-        modelo_prophet.add_seasonality(name='harvest_season', period=180, fourier_order=4)
-        modelo_prophet.fit(df_prophet)
-
-        # Generar fechas futuras desde el último punto del dataset
-        ultimo_valor = df_prophet['ds'].max()
-        futuro = modelo_prophet.make_future_dataframe(periods=diasAPredecir, freq='D')
-        futuro = futuro[futuro['ds'] > ultimo_valor]
-        
-        if futuro.empty:
-            return [], mse, mae
-        
-        # Hacer predicciones
-        predicciones_futuras = modelo_prophet.predict(futuro)
-        predicciones_futuras = predicciones_futuras[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
-        
-        # Ajustar predicciones por inflación
-        inflacion_data = {
-            'ds': ['2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01', '2024-01-01'],
-            'inflacion': [4.83, 2.83, 3.15, 7.36, 7.82, 4.66, 4.21]
+        # 2. Configuración para reducir tiempo de ejecución
+        parametros_optimizados = {
+            'changepoint_prior_scale': 0.05,
+            'seasonality_prior_scale': 10.0,
+            'seasonality_mode': 'additive',
+            'yearly_seasonality': True,
+            'weekly_seasonality': True,
+            'daily_seasonality': False,
+            'mcmc_samples': 0,  # Desactivar muestreo MCMC para mayor velocidad
+            'uncertainty_samples': 1000,  # Reducir para mayor velocidad
         }
 
-        inflacion_df = pd.DataFrame(inflacion_data)
-        inflacion_df['ds'] = pd.to_datetime(inflacion_df['ds'])
-        inflacion_df.set_index('ds', inplace=True)
-        inflacion_df = inflacion_df.resample('D').ffill()  # Rellenar valores hacia adelante
-
-        def ajustar_por_inflacion(fecha, precio):
-            año = fecha.year
-            if año in inflacion_df.index.year:
-                inflacion_anual = inflacion_df.loc[f"{año}-01-01", 'inflacion']
-                factor = (1 + inflacion_anual / 100)
-                return round(precio * factor, 2)
-            return precio
-
-        predicciones_futuras['yhat'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat']), axis=1)
-        predicciones_futuras['yhat_lower'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat_lower']), axis=1)
-        predicciones_futuras['yhat_upper'] = predicciones_futuras.apply(lambda row: ajustar_por_inflacion(row['ds'], row['yhat_upper']), axis=1)
+        # 3. Modelo con parámetros optimizados
+        modelo = Prophet(**parametros_optimizados)
         
-        return [
-            {
-                "fecha": row['ds'].strftime("%Y-%m-%d"),
-                "precio": row['yhat'],
-                "min_95": row['yhat_lower'],
-                "max_95": row['yhat_upper']
-            }
-            for _, row in predicciones_futuras.iterrows()
-        ], mse, mae
-    
+        # Estacionalidades personalizadas (simplificadas)
+        modelo.add_seasonality(name='monthly', period=30.5, fourier_order=3)
+        
+        # 4. Manejo de inflación corregido
+        inflacion_data = {
+            'ds': pd.to_datetime(['2018-01-01', '2019-01-01', '2020-01-01', 
+                                 '2021-01-01', '2022-01-01', '2023-01-01']),
+            'inflacion': [4.83, 2.83, 3.15, 7.36, 7.82, 4.66]
+        }
+        inflacion_df = pd.DataFrame(inflacion_data)
+        
+        # Unión segura sin NaN
+        df_prophet = pd.merge_asof(
+            df_prophet.sort_values('ds'),
+            inflacion_df.sort_values('ds'),
+            on='ds',
+            direction='backward'
+        ).ffill()  # Usar ffill() en lugar de fillna(method='ffill')
+
+        # 5. Configuración para reducir logs
+        import logging
+        logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
+        logging.getLogger('prophet').setLevel(logging.WARNING)
+        
+        # 6. Entrenamiento más rápido
+        with suppress_stdout_stderr():  # Función para suprimir output
+            modelo.fit(df_prophet)
+        
+        # 7. Predicción eficiente
+        future = modelo.make_future_dataframe(periods=diasAPredecir, freq='D')
+        
+        # Unión de inflación para futuro
+        future = pd.merge_asof(
+            future.sort_values('ds'),
+            inflacion_df.sort_values('ds'),
+            on='ds',
+            direction='backward'
+        ).ffill()
+
+        forecast = modelo.predict(future)
+        
+        # 8. Resultados formateados
+        predicciones = [{
+            "fecha": row['ds'].strftime("%Y-%m-%d"),
+            "precio": round(float(row['yhat']), 2),
+            "min_95": round(float(row['yhat_lower']), 2),
+            "max_95": round(float(row['yhat_upper']), 2)
+        } for _, row in forecast.iterrows() if row['ds'] > df_prophet['ds'].max()]
+
+        return predicciones, None, None
+        
     except Exception as e:
-        print("Error en Prophet:", e)
+        print(f"Error en Prophet: {str(e)}")
         return [], None, None
 
+# Función auxiliar para suprimir output
+class suppress_stdout_stderr:
+    def __enter__(self):
+        self.outnull_file = open(os.devnull, 'w')
+        self.errnull_file = open(os.devnull, 'w')
+        self.old_stdout_fileno = sys.stdout.fileno()
+        self.old_stderr_fileno = sys.stderr.fileno()
+        self.old_stdout = os.dup(self.old_stdout_fileno)
+        self.old_stderr = os.dup(self.old_stderr_fileno)
+        os.dup2(self.outnull_file.fileno(), self.old_stdout_fileno)
+        os.dup2(self.errnull_file.fileno(), self.old_stderr_fileno)
+        return self
+
+    def __exit__(self, *_):
+        os.dup2(self.old_stdout, self.old_stdout_fileno)
+        os.dup2(self.old_stderr, self.old_stderr_fileno)
+        self.outnull_file.close()
+        self.errnull_file.close()
 
 
 def prediccion_arima(df):

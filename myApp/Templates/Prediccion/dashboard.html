@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <br>
-<h2 class="mb-4">PREDICCION DE PRECIOS</h2>
+<h2 class="mb-4">PREDICCIÓN DE PRECIOS</h2>
 <div class="container mt-5">
     <div class="card shadow-lg p-4">
         <!-- Formulario en una sola línea -->
@@ -77,33 +77,49 @@
     </div>
 </div>
 
-<!-- Mostrar las mejores fechas de plantación -->
+<!-- Mostrar las mejores fechas de plantación y estadísticas de precios -->
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="alert alert-info text-center">
                 <h5>Mejor fecha para plantar en <strong>Verano</strong></h5>
                 <p>{{ mejor_plantacion_verano }}</p>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="alert alert-primary text-center">
                 <h5>Mejor fecha para plantar en <strong>Invierno</strong></h5>
                 <p>{{ mejor_plantacion_invierno }}</p>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="alert alert-success text-center">
+                <h5>Precio <strong>promedio</strong></h5>
+                {% if precio_promedio %}
+                    <p>{{ precio_promedio|floatformat:2 }}</p>
+                {% else %}
+                    <p id="precioPromedioDisplay">-</p>
+                {% endif %}
+            </div>
+        </div>
+        <!--
         <div class="col-md-3">
             <div class="alert alert-success text-center">
-                <h5>Error Cuadrático Medio (MSE)</h5>
-                <p>{{ mse|floatformat:2 }}</p>
+                <h5>Precio Promedio</h5>
+                <p>{{ precio_promedio|floatformat:2 }}</p>
+                <h5>Rango de Precios (90%)</h5>
+                <p>{{ rango_minimo|floatformat:2 }} - {{ rango_maximo|floatformat:2 }}</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="alert alert-warning text-center">
+                <h5>Error Cuadrático Medio (MSE)</h5>
+                <p>{{ mse|floatformat:2 }}</p>
                 <h5>Error Absoluto Medio (MAE)</h5>
                 <p>{{ mae|floatformat:2 }}</p>
             </div>
         </div>
+        -->
     </div>
 </div>
 
@@ -111,11 +127,18 @@
 <div class="container-fluid mt-4">
     <figure class="highcharts-figure">
         <div id="container" style="height: 500px;"></div>
+        <p class="text-center mt-2">
+            <strong>Precio promedio:</strong> {{ precio_promedio|floatformat:2 }} | 
+            <strong>Rango de precios (90% confianza):</strong> {{ rango_minimo|floatformat:2 }} - {{ rango_maximo|floatformat:2 }}
+        </p>
     </figure>
 </div>
 
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <script id="data-precios" type="application/json">{{ precios|safe }}</script>
 <script id="data-predicciones" type="application/json">{{ predicciones|safe }}</script>
@@ -136,11 +159,24 @@ function iniciarGrafico() {
     let precios = JSON.parse(document.getElementById("data-precios").textContent);
     let predicciones = JSON.parse(document.getElementById("data-predicciones").textContent);
 
+    // Procesar datos históricos
     let dataSeries = precios.map(item => [Date.parse(item.fecha), item.precioPromedio]);
+    
+    // Procesar predicciones
     let prediccionSeries = predicciones.map(item => [Date.parse(item.fecha), item.precio]);
-    let intervaloInferior = predicciones.map(item => [Date.parse(item.fecha), item.min_95]);
-    let intervaloSuperior = predicciones.map(item => [Date.parse(item.fecha), item.max_95]);
+    
+    // Procesar intervalo de confianza del 90%
+    let intervaloInferior = predicciones.map(item => [Date.parse(item.fecha), item.min_90 || item.min_95]);
+    let intervaloSuperior = predicciones.map(item => [Date.parse(item.fecha), item.max_90 || item.max_95]);
+    
+    // Calcular precio promedio para la línea de referencia
+    let suma = 0;
+    precios.forEach(item => {
+        suma += item.precioPromedio;
+    });
+    let precioPromedio = suma / precios.length;
 
+    // Conectar la última fecha histórica con la primera predicción
     if (dataSeries.length > 0 && prediccionSeries.length > 0) {
         let ultimaFecha = dataSeries[dataSeries.length - 1][0];
         let ultimoPrecio = dataSeries[dataSeries.length - 1][1];
@@ -148,36 +184,121 @@ function iniciarGrafico() {
         intervaloInferior.unshift([ultimaFecha, ultimoPrecio]);
         intervaloSuperior.unshift([ultimaFecha, ultimoPrecio]);
     }
-
+        document.getElementById('precioPromedioDisplay').textContent = precioPromedio.toFixed(2);
+        
+    // Crear el gráfico
     Highcharts.chart('container', {
-        chart: { type: 'spline' },
-        title: { text: 'Histórico de Precios y Predicción con Intervalo de Confianza' },
-        xAxis: { type: 'datetime' },
-        yAxis: { title: { text: 'Precio Promedio' }},
+        chart: {
+            type: 'spline',
+            zoomType: 'xy'
+        },
+        title: {
+            text: 'Histórico de Precios y Predicción con Intervalo de Confianza (90%)'
+        },
+        subtitle: {
+            text: 'Fuente: Datos de mercado agrícola'
+        },
+        xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                day: '%e %b %Y',
+                week: '%e %b %Y',
+                month: '%b %Y',
+                year: '%Y'
+            },
+            title: {
+                text: 'Fecha'
+            },
+            crosshair: true
+        },
+       
+        tooltip: {
+            shared: true,
+            crosshairs: true,
+            useHTML: true,
+            headerFormat: '<b>{point.key:%A, %e %b %Y}</b><br>',
+            pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f}</b><br/>'
+        },
+        legend: {
+            layout: 'horizontal',
+            align: 'center',
+            verticalAlign: 'bottom',
+            borderWidth: 1,
+            backgroundColor: '#FFFFFF',
+            shadow: true
+        },
+        plotOptions: {
+            series: {
+                marker: {
+                    enabled: false,
+                    symbol: 'circle',
+                    radius: 2,
+                    states: {
+                        hover: {
+                            enabled: true
+                        }
+                    }
+                }
+            },
+            arearange: {
+                tooltip: {
+                    pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.low:.2f} - {point.high:.2f}</b><br/>'
+                }
+            }
+        },
         series: [
             {
                 name: "Precio Promedio Histórico",
                 data: dataSeries,
-                color: 'blue'
+                color: '#3498db',
+                zIndex: 1,
+                lineWidth: 2
             },
             {
                 name: "Predicción",
                 data: prediccionSeries,
-                color: 'green',
+                color: '#2ecc71',
                 dashStyle: 'ShortDash',
-                marker: { enabled: false }
+                zIndex: 2,
+                lineWidth: 2
             },
             {
                 name: "Intervalo de Confianza (90%)",
                 type: 'arearange',
                 data: intervaloInferior.map((item, i) => [item[0], intervaloInferior[i][1], intervaloSuperior[i][1]]),
-                color: 'rgba(0, 128, 0, 0.2)',
-                enableMouseTracking: false
+                color: 'rgba(46, 204, 113, 0.3)',
+                fillOpacity: 0.3,
+                lineWidth: 0,
+                linkedTo: ':previous',
+                zIndex: 0,
+                marker: {
+                    enabled: false
+                }
             }
-        ]
+        ],
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
+        },
+        credits: {
+            enabled: true,
+            text: 'Sistema de Predicción de Precios',
+            href: '#'
+        }
     });
 }
 </script>
+
 <script>
     const rangeInput = document.getElementById("rangeInput");
     const rangeValue = document.getElementById("rangeValue");
