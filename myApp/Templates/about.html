@@ -2,7 +2,7 @@
 
 {% load static %}
 {% block content %}
-   
+
 <!-- About Start -->
 <div class="container-fluid py-5">
     <div class="container pt-5">
@@ -10,7 +10,8 @@
             <!-- Columna de la imagen de fondo -->
             <div class="col-lg-6" style="min-height: 500px;">
                 <div class="position-relative h-100">
-                    <img class="position-absolute w-100 h-100" src="{% static 'assets/img/propias/cilantro.jpeg' %}" style="object-fit: cover;">
+                    <img class="position-absolute w-100 h-100" src="{% static 'assets/img/propias/cilantro.jpeg' %}"
+                        style="object-fit: cover;">
                 </div>
             </div>
 
@@ -18,15 +19,21 @@
             <div class="col-lg-6 pt-5 pb-lg-5">
                 <div class="about-text bg-white p-4 p-lg-5 my-lg-5">
                     <h5 class="text-uppercase" style="letter-spacing: 5px; color:#8ebd9d">Acerca de</h5>
-                    <h1 class="mb-3"  style="color:#256060">Nosotros.</h1>
-                    <p>Soy un desarrollador web especializado en la creación de soluciones digitales a medida. Diseño y desarrollo sitios web modernos, optimizados y funcionales, adaptados a las necesidades de cada cliente. Con experiencia en tecnologías avanzadas, me enfoco en ofrecer productos de alta calidad que mejoren la experiencia del usuario y potencien los negocios en el mundo digital."</p>
+                    <h1 class="mb-3" style="color:#256060; text-align: left !important;">Nosotros.</h1>
+                    <p>
+                        Somos un equipo multidisciplinario apasionado por la innovación y el desarrollo de soluciones
+                        digitales efectivas. Combinamos nuestras habilidades en diseño, desarrollo web, tecnología y
+                        agroindustria para ofrecer proyectos integrales, funcionales y adaptados a las necesidades de
+                        nuestros clientes. Nuestra misión es crear experiencias digitales de alto impacto que impulsen
+                        el crecimiento y la transformación de los negocios en el entorno actual.
+                    </p>
                     <div class="row mb-4">
-                       
+
                         <div class="col-6">
-                            <img class="img-fluid" src="{%  static 'assets/img/propias/logo claro.png' %}" alt="">
+                            <img class="img-fluid" style="width: 60%;" src="{%  static 'assets/img/propias/logo claro.png' %}" alt="">
                         </div>
                     </div>
-                   <!-- <a href="#" class="btn btn-primary mt-1">Book Now</a>*/ -->
+                    <!-- <a href="#" class="btn btn-primary mt-1">Book Now</a>*/ -->
                 </div>
             </div>
         </div>
@@ -39,22 +46,26 @@
 <div class="container-fluid py-5">
     <div class="container pt-5 pb-3">
         <div class="text-center mb-3 pb-3">
-            <h1  style="color:#1b475d">ASI SOMOS</h1>
-            <h5 class="text-uppercase" style="letter-spacing: 5px;  color:#8ebd9d">"Especialistas en la creación y desarrollo integral de proyectos, desde la planificación hasta la implementación, asegurando soluciones eficientes y de alta calidad."</h5>
+            <h1 style="color:#1b475d">ASI SOMOS</h1>
+            <h5 class="text-uppercase" style="letter-spacing: 5px; color:#8ebd9d">
+                Especialistas en la creación y desarrollo integral de proyectos, desde la planificación hasta la
+                implementación, asegurando soluciones eficientes y de alta calidad.
+            </h5>
         </div>
         <div class="row">
             <!-- Guía 1 -->
             <div class="col-lg-4 col-md-4 col-sm-6 pb-1">
                 <div class="team-item bg-white mb-4">
                     <div class="team-img position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{% static 'assets/img/team/team-1.jpg' %}" alt="Guide 1">
+                        <img class="img-fluid w-100" src="{% static 'assets/img/team/jose.jpeg' %}" alt="Guide 1">
                         <div class="team-social d-flex justify-content-center" style="margin-top: 15px;">
-                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-facebook-f fa-2x"></i></a>
+                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i
+                                    class="fab fa-facebook-f fa-2x"></i></a>
                             <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-instagram fa-2x"></i></a>
                         </div>
                     </div>
                     <div class="text-center py-4">
-                        <h5 class="text-truncate" style="color:#1b475d">Jose Manuel Garcia</h5>
+                        <h5 class="text-truncate" style="color:#1b475d">José Manuel García</h5>
                         <p class="m-0" style="color:#1961ed">Desarrollador</p>
                     </div>
                 </div>
@@ -64,16 +75,17 @@
             <div class="col-lg-4 col-md-4 col-sm-6 pb-1">
                 <div class="team-item bg-white mb-4">
                     <div class="team-img position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{% static 'assets/img/team/team-2.jpg' %}" alt="Guide 2">
+                        <img class="img-fluid w-100" src="{% static 'assets/img/team/fer.jpeg' %}" alt="Guide 2">
                         <div class="team-social d-flex justify-content-center" style="margin-top: 15px;">
-                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-facebook-f fa-2x"></i></a>
+                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i
+                                    class="fab fa-facebook-f fa-2x"></i></a>
                             <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-instagram fa-2x"></i></a>
                         </div>
-                        
                     </div>
                     <div class="text-center py-4">
-                        <h5 class="text-truncate"  style="color:#1b475d">Maria Fernanda Bernal</h5>
-                        <p class="m-0"  style="color:#1961ed">Diseñadora</p>
+                        <h5 class="text-truncate" style="color:#1b475d">María Fernanda Bernal</h5>
+                        <p class="m-0" style="color:#1961ed">Diseñadora</p>
+
                     </div>
                 </div>
             </div>
@@ -82,19 +94,22 @@
             <div class="col-lg-4 col-md-4 col-sm-6 pb-1">
                 <div class="team-item bg-white mb-4">
                     <div class="team-img position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{% static 'assets/img/team/team-3.jpg' %}" alt="Guide 3">
+                        <img class="img-fluid w-100" src="{% static 'assets/img/team/yorch.jpeg' %}" alt="Guide 3">
                         <div class="team-social d-flex justify-content-center" style="margin-top: 15px;">
-                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-facebook-f fa-2x"></i></a>
+                            <a class="p-0 mx-2" href="" style="color:#1961ed"><i
+                                    class="fab fa-facebook-f fa-2x"></i></a>
                             <a class="p-0 mx-2" href="" style="color:#1961ed"><i class="fab fa-instagram fa-2x"></i></a>
                         </div>
                     </div>
                     <div class="text-center py-4">
                         <h5 class="text-truncate" style="color:#1b475d">Jorge Luis Alonso</h5>
-                        <p class="m-0" style="color:#1961ed">Agronomo</p>
+                        <p class="m-0" style="color:#1961ed">Agrónomo</p>
                     </div>
                 </div>
             </div>
         </div>
+
+
     </div>
 </div>
 

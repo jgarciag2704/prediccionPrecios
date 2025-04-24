@@ -1,89 +1,86 @@
-{% extends 'layouts/base.html' %} 
+{% extends 'layouts/base.html' %}
 {% load static %}
+
 {% block content %}
 
-<div class="custom-container mt-5"> <!-- Contenedor fluido (100% de ancho) -->
-  <!-- Título -->
-  <div class="text-center mb-4">
-    <h1>Carga de Excel</h1>
-  </div>
-
-  <div class="row">
-    <!-- Formulario -->
-    <div class="col-md-4 d-flex"> <!-- Añadido d-flex para igualar la altura -->
-      <div class="card shadow-sm h-100 w-100"> <!-- Añadido h-100 y w-100 -->
-        <div class="card-body d-flex flex-column"> <!-- Añadido d-flex y flex-column -->
-          <form method="post" enctype="multipart/form-data" id="upload-form" class="flex-grow-1"> <!-- Añadido flex-grow-1 -->
-            {% csrf_token %}
-
-            <div class="form-group">
-              <label for="excel_file">Cargar archivo Excel:</label>
-              <input
-                type="file"
-                name="excel_file"
-                id="excel_file"
-                class="form-control"
-                accept=".xls,.xlsx"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="option">Seleccionar opción:</label>
-              <select name="option" id="option" class="form-control">
-                <option value="Central de Abasto de León">Central de Abasto de León</option>
-                <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
-                <option value="Central de Abasto de Morelia">Central de Abasto de Morelia</option>
-              </select>
-            </div>
-
-            <!-- Botón para subir el archivo -->
-            <button type="submit" id="upload-btn" class="btn btn-primary w-100">Subir archivo</button>
-          </form>
-        </div>
+<div class="main-container">
+  <div class="content-wrapper">
+    
+    <!-- Panel izquierdo: Formulario de carga -->
+    <div class="form-panel fade-in">
+      <div class="text-center mb-4">
+        <h1 class="form-title">Carga de archivo Excel</h1>
       </div>
-    </div>
 
-    <!-- Previsualización -->
-    <div class="col-md-8 d-flex"> <!-- Añadido d-flex para igualar la altura -->
-      <div class="card shadow-sm h-100 w-100"> <!-- Añadido h-100 y w-100 -->
-        <div class="card-body d-flex flex-column"> <!-- Añadido d-flex y flex-column -->
-          <h2>Previsualización del archivo Excel</h2>
-          <div class="table-responsive flex-grow-1"> <!-- Añadido flex-grow-1 -->
-            {% if preview_data %}
-              {{ preview_data|safe }} <!-- Muestra la previsualización si hay datos -->
-            {% else %}
-              <div class="text-center">
-                <img 
-                  src="{% static 'assets/img/propias/cargaArchivo.png' %}" 
-                  alt="Carga de archivo" 
-                  class="img-fluid"
-                  width="600"
-                  height="auto" 
-                />
-              </div>
-            {% endif %}
+      {% if messages %}
+        <div class="alert alert-info">
+          <ul style="margin-bottom: 0; padding-left: 20px;">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="form-container">
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="excel_file">Selecciona archivo Excel:</label>
+            <input
+              type="file"
+              name="excel_file"
+              id="excel_file"
+              class="form-control"
+              accept=".xls,.xlsx"
+              required
+            />
           </div>
-          {% if preview_data %} <!-- Solo muestra el botón de confirmar si hay previsualización -->
-            <form method="post" action="{% url 'confirmar_carga' %}">
-              {% csrf_token %}
-              <input type="hidden" name="option" value="{{ option }}" />
-              <button type="submit" class="btn btn-success mt-3 w-100">Confirmar carga</button>
-            </form>
-          {% endif %}
-        </div>
+
+          <div class="form-group">
+            <label for="option">Seleccionar central:</label>
+            <select name="option" id="option" class="form-control">
+              <option value="Central de Abasto de León">Central de Abasto de León</option>
+              <option value="Central de Abasto de Celaya">Central de Abasto de Celaya</option>
+              <option value="Central de Abasto de Morelia">Central de Abasto de Morelia</option>
+            </select>
+          </div>
+
+          <div class="btn-container">
+            <button type="submit" class="btn btn-primary w-100">Subir archivo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Panel derecho: Previsualización -->
+    <div class="image-panel fade-in" style="animation-delay: 0.2s;">
+      <h2 class="form-title">Previsualización</h2>
+      <div class="image-card">
+        {% if preview_data %}
+          <div class="table-responsive">
+            {{ preview_data|safe }}
+          </div>
+          <form method="post" action="{% url 'confirmar_carga' %}" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="option" value="{{ option }}" />
+            <button type="submit" class="btn btn-success w-100">Confirmar carga</button>
+          </form>
+        {% else %}
+          <div class="image-placeholder">
+            <img 
+              src="{% static 'assets/img/propias/cargaArchivo.png' %}" 
+              alt="Carga de archivo" 
+              class="img-fluid"
+              style="max-width: 80%; height: auto;"
+            />
+            <p class="mt-3 text-muted">Aún no se ha cargado ningún archivo</p>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
-
-  {% if messages %}
-  <div class="alert mt-4">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
 </div>
-
 
 {% endblock content %}

@@ -1,81 +1,198 @@
 {% extends 'layouts/base.html' %}
+{% load static %}
 
 {% block content %}
 
-<div class="container mt-5">
-    <div class="text-center mb-4">
-        <h1>{{ username }}</h1>
-    </div>
 
-    <h2 class="mb-4">Editar Advertencias de Hortaliza</h2>
 
-    {% if messages %}
-        <div class="alert alert-info">
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
+<div class="main-container">
+  <div class="content-wrapper">
+    <!-- Panel izquierdo (formulario) -->
+    <div class="form-panel fade-in">
+        <div class="text-center mb-4">
+          <h1 class="username-title">{{ username }}</h1>
+        </div>
+      
+        <h2 class="form-title">Editar Advertencias de Hortaliza</h2>
+      
+        {% if messages %}
+          <div class="alert alert-info">
+            <ul style="margin-bottom: 0; padding-left: 20px;">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
             </ul>
+          </div>
+        {% endif %}
+      
+        <div class="form-container">
+          <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+              <label for="hortaliza">Selecciona una hortaliza:</label>
+              <select id="hortaliza" name="hortaliza" class="form-control">
+                <option value="">-- Selecciona una opción --</option>
+                {% for hortaliza in hortalizas %}
+                  <option value="{{ hortaliza.id }}" data-nombre="{{ hortaliza.Nombre|lower }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %}>
+                    {{ hortaliza.Nombre }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+      
+            <div class="form-group">
+              <label for="tiempo_invierno"><strong>Tiempo de Cosecha en Invierno:</strong></label>
+              <div class="d-flex align-items-center">
+                <span id="tiempo_invierno" class="font-weight-bold text-primary" style="font-size: 1.1rem; margin: 0 5px;">-</span> días
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="tiempo_verano"><strong>Tiempo de Cosecha en Verano:</strong></label>
+              <div class="d-flex align-items-center">
+                <span id="tiempo_verano" class="font-weight-bold text-primary" style="font-size: 1.1rem; margin: 0 5px;">-</span> días
+              </div>
+            </div>
+      
+            <div class="form-group">
+              <label for="advertencias">Advertencias:</label>
+              <textarea id="advertencias" name="advertencias" class="form-control" rows="6"></textarea>
+              <small class="text-muted">Escribe las advertencias relevantes para esta hortaliza.</small>
+            </div>
+            
+            <div class="btn-container">
+              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+          </form>
         </div>
-    {% endif %}
+      </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form method="POST">
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="hortaliza">Selecciona una hortaliza:</label>
-                    <select id="hortaliza" name="hortaliza" class="form-control">
-                        <option value="">-- Selecciona una opción --</option>
-                        {% for hortaliza in hortalizas %}
-                            <option value="{{ hortaliza.id }}" {% if hortaliza.id == request.POST.hortaliza|default:'' %}selected{% endif %}>
-                                {{ hortaliza.Nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="tiempo_invierno"><strong>Tiempo de Cosecha en Invierno:</strong></label>
-                    <span id="tiempo_invierno">-</span> días
-                </div>
-                
-                <div class="form-group">
-                    <label for="tiempo_verano"><strong>Tiempo de Cosecha en Verano:</strong></label>
-                    <span id="tiempo_verano">-</span> días
-                </div>
-
-                <div class="form-group">
-                    <label for="advertencias">Advertencias:</label>
-                    <textarea id="advertencias" name="advertencias" class="form-control"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </form>
+    <!-- Panel derecho (imagen) -->
+    <div class="image-panel fade-in" style="animation-delay: 0.2s;">
+      <h2 class="form-title">Visualización</h2>
+      <div class="image-card" id="image-container">
+        <div class="image-placeholder">
+          <i class="fas fa-seedling"></i>
+          <p>Selecciona una hortaliza para ver su imagen</p>
         </div>
+      </div>
     </div>
+  </div>
 </div>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 <script type="text/javascript">
     const hortalizasAdvertencias = {{ hortalizas_advertencias|safe }};
+    const imageFormats = ['jpeg', 'jpg', 'png']; // Formatos de imagen a buscar
 
-    document.getElementById('hortaliza').addEventListener('change', function() {
+    // Función para probar diferentes formatos de imagen
+    async function tryImageFormats(baseName, staticPath) {
+        const nameVariations = [
+            baseName.toLowerCase().replace(/ /g, '-'),  // nombre-con-guiones
+            encodeURIComponent(baseName.toLowerCase()),  // nombre%20con%20espacios
+            baseName.toLowerCase().replace(/ /g, '_')   // nombre_con_guiones_bajos
+        ];
+
+        for (const name of nameVariations) {
+            for (const format of imageFormats) {
+                const imageUrl = `${staticPath}${name}.${format}`;
+                const exists = await checkImageExists(imageUrl);
+                if (exists) return imageUrl;
+            }
+        }
+        return null;
+    }
+
+    // Función para verificar si una imagen existe
+    function checkImageExists(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+        });
+    }
+
+    document.getElementById('hortaliza').addEventListener('change', async function() {
         const selectedHortalizaId = this.value;
+        const selectedOption = this.options[this.selectedIndex];
+        const nombreHortaliza = selectedOption.textContent.trim();
         const advertenciasField = document.getElementById('advertencias');
         const tiempoInviernoField = document.getElementById('tiempo_invierno');
         const tiempoVeranoField = document.getElementById('tiempo_verano');
-        
+        const imageContainer = document.getElementById('image-container');
+        const staticPath = "{% static 'assets/img/hortalizas/' %}";
+        const defaultImage = "{% static 'assets/img/hortalizas/default.jpg' %}";
+
         if (selectedHortalizaId && hortalizasAdvertencias[selectedHortalizaId]) {
             const data = hortalizasAdvertencias[selectedHortalizaId];
             advertenciasField.value = data.advertencias || '';
             tiempoInviernoField.textContent = data.invierno || '-';
             tiempoVeranoField.textContent = data.verano || '-';
+
+            if (nombreHortaliza) {
+                try {
+                    // Buscar imagen en diferentes formatos
+                    const imageUrl = await tryImageFormats(nombreHortaliza, staticPath);
+                    
+                    if (imageUrl) {
+                        // Imagen encontrada
+                        imageContainer.innerHTML = `
+                            <img src="${imageUrl}" 
+                                 alt="${nombreHortaliza}" 
+                                 class="fade-in"
+                                 style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; padding: 10px;">
+                        `;
+                    } else {
+                        // No se encontró imagen en ningún formato
+                        imageContainer.innerHTML = `
+                            <div class="image-placeholder fade-in">
+                                <i class="fas fa-image"></i>
+                                <p>Imagen no encontrada para:<br>${nombreHortaliza}</p>
+                                <img src="${defaultImage}" 
+                                     alt="Imagen por defecto" 
+                                     style="max-width: 80%; max-height: 80%; object-fit: contain; margin-top: 15px;">
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar imagen:', error);
+                    imageContainer.innerHTML = `
+                        <div class="image-placeholder fade-in">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Error al cargar la imagen</p>
+                            <img src="${defaultImage}" 
+                                 alt="Imagen por defecto" 
+                                 style="max-width: 80%; max-height: 80%; object-fit: contain; margin-top: 15px;">
+                        </div>
+                    `;
+                }
+            }
         } else {
             advertenciasField.value = '';
             tiempoInviernoField.textContent = '-';
             tiempoVeranoField.textContent = '-';
+            imageContainer.innerHTML = `
+                <div class="image-placeholder fade-in">
+                    <i class="fas fa-seedling"></i>
+                    <p>Selecciona una hortaliza para ver su imagen</p>
+                </div>
+            `;
         }
+    });
+
+    // Efecto de cursor
+    document.addEventListener("DOMContentLoaded", () => {
+        const cursorLight = document.createElement("div");
+        cursorLight.className = "cursor-light";
+        document.body.appendChild(cursorLight);
+
+        document.addEventListener("mousemove", (e) => {
+            cursorLight.style.left = `${e.clientX}px`;
+            cursorLight.style.top = `${e.clientY}px`;
+        });
     });
 </script>
 

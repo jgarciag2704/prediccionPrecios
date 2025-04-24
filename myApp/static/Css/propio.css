@@ -156,3 +156,772 @@ h1, h2 {
     max-width: 90%; /* Ajusta este valor según tus necesidades */
     margin: 0 auto; /* Centra el contenedor */
   }
+
+     /* Estilo para alinear el navbar a la izquierda */
+     .navbar-nav .nav-link {
+        font-size: 1.8rem; /* Aumenta el tamaño de la fuente */
+        font-weight: 500;
+        color:#06402b !important; /* Cambia el color de las letras a rojo */
+      }
+    
+      /* Centrar los enlaces del navbar perfectamente */
+      #navmenu {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+      }
+    
+      /* Asegurarse de que los enlaces estén perfectamente centrados */
+      .navbar-collapse {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+    
+      .navbar-nav {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+    
+      /* Eliminar espacio entre el logo y los enlaces */
+      .navbar-nav .nav-item {
+        margin-left: 10px;
+      }
+    
+      .navbar-brand {
+        margin-right: 10px;
+      }
+  
+      /* Estilos responsive para el navbar */
+      @media (max-width: 992px) {
+        .navbar-nav .nav-link {
+          font-size: 1.4rem;
+          padding: 0.5rem 1rem;
+        }
+        
+        .navbar-brand img {
+          width: 50px !important;
+        }
+      }
+  
+      @media (max-width: 768px) {
+        .navbar-nav {
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .navbar-nav .nav-item {
+          margin-left: 0;
+          margin-bottom: 5px;
+        }
+        
+        .navbar-nav .nav-link {
+          font-size: 1.2rem;
+        }
+        
+        #navbarNav {
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 10px;
+          border-radius: 5px;
+        }
+        
+        .navbar-toggler {
+          margin-left: auto;
+        }
+      }
+  
+      /* Estilos para el contenedor de texto en el carrusel */
+      .hero-text-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        z-index: 10;
+        text-align: center; /* Centra el texto horizontalmente */
+
+      }
+  
+      @media (min-width: 768px) {
+        .hero-text-container {
+          width: 80%;
+        }
+      }
+  
+      .hero-text-content {
+        background-color: rgba(128, 128, 128, 0.1);
+        padding: 1.5rem;
+        border-radius: 70px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+  
+      @media (max-width: 576px) {
+        .hero-text-content {
+          padding: 1rem;
+          border-radius: 40px;
+        }
+        
+        .hero-text-content h2 {
+          font-size: 1.5rem;
+        }
+        
+        .hero-text-content h5 {
+          font-size: 1rem;
+        }
+        
+        .hero-text-content .btn {
+          font-size: 1rem !important;
+          padding: 0.5rem 1rem !important;
+        }
+      }
+  
+      /* Asegurar que el carrusel ocupe siempre toda la pantalla */
+      .carousel, .carousel-inner, .carousel-item {
+        height: 100vh;
+      }
+  
+      .carousel-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+
+
+
+
+/* codigo index */
+   /* Estilo para alinear el navbar a la izquierda */
+   .navbar-nav .nav-link {
+    font-size: 1.8rem; /* Aumenta el tamaño de la fuente */
+    font-weight: 500;
+    color:#06402b !important; /* Cambia el color de las letras a rojo */
+  }
+
+  /* Centrar los enlaces del navbar perfectamente */
+  #navmenu {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* Asegurarse de que los enlaces estén perfectamente centrados */
+  .navbar-collapse {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .navbar-nav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Eliminar espacio entre el logo y los enlaces */
+  .navbar-nav .nav-item {
+    margin-left: 10px;
+  }
+
+  .navbar-brand {
+    margin-right: 10px;
+  }
+
+  /* Estilos responsive para el navbar */
+  @media (max-width: 992px) {
+    .navbar-nav .nav-link {
+      font-size: 1.4rem;
+      padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand img {
+      width: 50px !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .navbar-nav {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .navbar-nav .nav-item {
+      margin-left: 0;
+      margin-bottom: 5px;
+    }
+    
+    .navbar-nav .nav-link {
+      font-size: 1.2rem;
+    }
+    
+    #navbarNav {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .navbar-toggler {
+      margin-left: auto;
+    }
+  }
+
+  /* Estilos para el contenedor de texto en el carrusel */
+  .hero-text-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    z-index: 10;
+  }
+
+  @media (min-width: 768px) {
+    .hero-text-container {
+      width: 80%;
+    }
+  }
+
+.hero-text-content {
+  background: linear-gradient(45deg, rgba(128, 128, 128, 0.1), rgba(255, 255, 255, 0.3)); 
+  padding: 1.5rem;
+  border-radius: 70px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  
+
+}
+
+
+  @media (max-width: 576px) {
+    .hero-text-content {
+      padding: 1rem;
+      border-radius: 40px;
+      
+    }
+    
+    .hero-text-content h2 {
+      font-size: 1.5rem;
+    }
+    
+    .hero-text-content h5 {
+      font-size: 1rem;
+    }
+    
+    .hero-text-content .btn {
+      font-size: 1rem !important;
+      padding: 0.5rem 1rem !important;
+    }
+  }
+
+  /* Asegurar que el carrusel ocupe siempre toda la pantalla */
+  .carousel, .carousel-inner, .carousel-item {
+    height: 100vh;
+  }
+
+  .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+
+  /* boton personalizado de index*/
+  .botonpersonalizadoindex {
+    position: relative;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(45deg, #4CAF50, #FFB300, #795548);
+    padding: 14px 25px;
+    border-radius: 10px;
+    font-size: 1.25em;
+    cursor: pointer;
+}
+
+.botonpersonalizadoindex span {
+    position: relative;
+    z-index: 1;
+}
+
+.botonpersonalizadoindex::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background: #272727;
+    border-radius: 9px;
+    transition: 0.5s;
+}
+
+.botonpersonalizadoindex:hover::before {
+    opacity: 0.7;
+}
+
+.botonpersonalizadoindex::after {
+    content: "";
+    position: absolute;
+    inset: 0px;
+    background: linear-gradient(45deg, #4CAF50, #FFB300, #795548);
+    border-radius: 9px;
+    transition: 0.5s;
+    opacity: 0;
+    filter: blur(20px);
+}
+
+.botonpersonalizadoindex:hover::after {
+    opacity: 1;
+}
+.botonpersonalizadoindex,
+.botonpersonalizadoindex:hover,
+.botonpersonalizadoindex:focus {
+    color: #fff;
+}
+
+.botonpersonalizadoindex,
+.botonpersonalizadoindex:hover,
+.botonpersonalizadoindex:focus {
+    color: #fff;
+    text-decoration: none;
+}
+
+
+
+/* From Uiverse.io by sahilxkhadka */ 
+.card {
+  width: 342px;
+  height: 184px;
+  position: relative;
+  padding: 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.background {
+  fill: linear-gradient(90deg, #5936B4 0%, #362A84 100%);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.cloud {
+  position: absolute;
+  right: 0;
+  top: -12px;
+}
+
+.cloud svg {
+  height: 120px;
+}
+
+.card .main-text {
+  font-size: 48px;
+  z-index: 2;
+}
+
+.card .info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.card .info .text-gray {
+  color: rgba(235, 235, 245, 0.60);
+}
+
+.card .info .info-right {
+  align-self: flex-end;
+}
+
+
+/* about */
+
+.team-img img {
+    width: 100%; /* Asegura que la imagen ocupe todo el ancho del contenedor */
+    height: 350px; /* Establece una altura fija para todas las imágenes */
+    object-fit: cover; /* Asegura que la imagen cubra el área sin distorsionarse */
+  }
+
+
+
+  /*advertencias*/.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 50vh;
+  background-color: #f8f9fa;
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 15px;
+  gap: 15px;
+}
+
+@media (min-width: 992px) {
+  .content-wrapper {
+    flex-direction: row;
+    padding: 20px;
+    gap: 20px;
+  }
+}
+
+/* Panel izquierdo (formulario) */
+.form-panel {
+  flex: 1;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 992px) {
+  .form-panel {
+    padding: 20px;
+    margin-right: 0;
+  }
+}
+
+/* Panel derecho (imagen) */
+.image-panel {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 992px) {
+  .image-panel {
+    padding: 20px;
+  }
+}
+
+/* Tarjeta de imagen */
+.image-card {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 250px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.image-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image-card img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 6px;
+  transition: transform 0.3s ease;
+}
+
+.image-card img:hover {
+  transform: scale(1.02);
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 1rem;
+  padding: 20px;
+  text-align: center;
+}
+
+.image-placeholder i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #adb5bd;
+}
+
+/* Mejoras para el formulario */
+.form-title {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 8px;
+  font-size: 1.4rem;
+}
+
+.form-title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+}
+
+.form-container {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.2);
+}
+
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Ajustes para el select */
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 1em;
+  padding-right: 2.5em;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Efecto de cursor */
+.cursor-light {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(0,225,255,0.1) 0%, rgba(0,225,255,0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  mix-blend-mode: screen;
+  transition: transform 0.1s ease;
+}
+
+/* Optimización para mobile */
+@media (max-width: 768px) {
+  .form-title {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+  
+  .form-container {
+    padding: 5px;
+  }
+  
+  .image-card {
+    min-height: 200px;
+  }
+  
+  .btn-primary {
+    padding: 8px 16px;
+  }
+}
+
+/*Dashboard*/
+
+
+
+.main-container {
+  width: 100%;
+  padding: 0 15px;
+}
+
+/* Mejoras para las tarjetas */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+/* Estilo para el slider */
+.form-range::-webkit-slider-thumb {
+  background: #3498db;
+  width: 20px;
+  height: 20px;
+}
+
+.form-range::-moz-range-thumb {
+  background: #3498db;
+  width: 20px;
+  height: 20px;
+}
+
+/* Asegurar que Highcharts ocupe todo el espacio */
+
+    /* ESTILOS CRÍTICOS PARA EL GRÁFICO */
+    .highcharts-container {
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        overflow: visible !important;
+    }
+    
+    .highcharts-root {
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    
+    #container {
+        display: block !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Anular cualquier estilo que limite el ancho */
+    .main-container {
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+    
+    .chart-section {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+        #container {
+            height: 400px !important;
+        }
+        
+        .btn-group {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn-group .btn {
+            margin: 3px;
+            flex: 1 0 auto;
+        }
+    }
+
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  .main-container {
+      padding: 0 10px;
+  }
+  
+  #container {
+      height: 400px !important;
+  }
+  
+  .display-6 {
+      font-size: 1.5rem;
+  }
+  
+  .card-body {
+      padding: 1rem;
+  }
+  
+  .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+  }
+  
+  .btn-group .btn {
+      margin: 2px;
+  }
+}
+
+/* Mejor contraste para las etiquetas */
+.form-label {
+  color: #495057;
+}
+
+/* Tamaño adecuado para los selects */
+.form-select-lg {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+/* Espaciado entre secciones */
+.header-section,
+.form-section,
+.info-section,
+.results-section,
+.chart-section {
+  margin-bottom: 30px;
+}

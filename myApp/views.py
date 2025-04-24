@@ -1,41 +1,42 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import historicoPrecios,hortaliza  
-from django.http import HttpResponse,JsonResponse
-import pandas as pd
-import numpy as np
-from django.contrib import messages
-from django.shortcuts import redirect
-import tempfile
-from django.core.serializers.json import DjangoJSONEncoder
-import json
-from statsmodels.tsa.arima.model import ARIMA
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.models import Sequential
-import tensorflow as tf
-from prophet import Prophet  
-from sklearn.preprocessing import MinMaxScaler
-from .forms import HortalizaForm
-from django.utils.dateparse import parse_date
-from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor  # Para Random Forest
-import xgboost as xgb  # Para XGBoost
-from sklearn.model_selection import train_test_split  # Para dividir datos
-from sklearn.metrics import mean_squared_error, mean_absolute_error 
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-from sklearn.preprocessing import StandardScaler
-from django.db.models import Count
-from datetime import datetime
-from sklearn.model_selection import ParameterGrid 
-from prophet.diagnostics import cross_validation, performance_metrics
 import os
 import sys
+import json
 import logging
+import tempfile
+from datetime import datetime
 from contextlib import contextmanager
+
+import numpy as np
 import pandas as pd
+import tensorflow as tf
+import xgboost as xgb
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+from django.utils.dateparse import parse_date
+from django.db.models import Count
+
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.model_selection import (
+    TimeSeriesSplit, train_test_split, ParameterGrid
+)
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.ensemble import RandomForestRegressor
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+
 from prophet import Prophet
+from prophet.diagnostics import cross_validation, performance_metrics
+
+from statsmodels.tsa.arima.model import ARIMA
+
+from .models import historicoPrecios, hortaliza
+from .forms import HortalizaForm
+from django.core.serializers.json import DjangoJSONEncoder
+
 # Create your views here.
 
 def index(request):
