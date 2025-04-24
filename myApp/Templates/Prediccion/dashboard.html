@@ -6,7 +6,7 @@
 <div class="main-container" style="max-width: 1800px; margin: 0 auto; padding: 0 20px;">
 
   <!-- Cabecera centrada -->
-  <div class="header-section" style="margin-bottom: 30px;">
+  <div class="header-section" style="margin: 0 60px 30px 60px;">
     <div class="d-flex justify-content-between align-items-center">
       <h2 class="mb-0 display-5 fw-bold">PREDICCIÓN DE PRECIOS</h2>
       <div class="badge bg-primary text-white p-2 fs-6">
@@ -16,7 +16,7 @@
   </div>
 
   <!-- Formulario expandido -->
-  <div class="form-section" style="margin-bottom: 30px;">
+  <div class="form-section" style="margin: 0 60px 30px 60px;">
     <div class="card shadow-lg p-4 border-primary" style="width: 100%;">
       <form method="POST">
         {% csrf_token %}
@@ -65,71 +65,71 @@
     </div>
   </div>
 
-  <!-- Sección de información expandida -->
-  <div class="info-section" style="margin-bottom: 30px;">
-    <div class="row g-3">
-      <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card bg-light border-0 h-100">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Presentación</h5>
-            <p class="card-text text-dark">{{ presentacion }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card bg-light border-0 h-100">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Mercado</h5>
-            <p class="card-text text-dark">{{ mercado }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card bg-light border-0 h-100">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Cosecha Verano</h5>
-            <p class="card-text text-dark">{{ tiempoCosechaVerano }} días</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card bg-light border-0 h-100">
-          <div class="card-body">
-            <h5 class="card-title text-primary">Cosecha Invierno</h5>
-            <p class="card-text text-dark">{{ tiempoCosechaInvierno }} días</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Resultados expandidos -->
-  <div class="results-section" style="margin-bottom: 30px;">
+  <div class="results-section" style="margin: 0 60px 3px 60px;">
     <div class="row g-3">
-      <div class="col-xl-4 col-lg-4 col-md-6">
+      
+        <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="card border-success h-100">
           <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="fas fa-sun me-2"></i>Mejor fecha para plantar (Verano)</h5>
+            <h5 class="mb-0"><i class="fas fa-sun me-2"></i> Mejor fecha para plantar (Verano)</h5>
           </div>
           <div class="card-body text-center">
             <p class="display-6 text-success">{{ mejor_plantacion_verano }}</p>
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-sun me-2"></i> Tiempo para cosecha</h5>
+              </div>
+              <div class="card-body text-center">
+                <p class="display-6 text-success">{{ tiempoCosechaVerano }} días</p>
+                
+              </div>
           </div>
         </div>
       </div>
-      <div class="col-xl-4 col-lg-4 col-md-6">
+
+
+      <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="card border-primary h-100">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i>Mejor fecha para plantar (Invierno)</h5>
+            <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i> Mejor fecha para plantar (Invierno)</h5>
           </div>
           <div class="card-body text-center">
             <p class="display-6 text-primary">{{ mejor_plantacion_invierno }}</p>
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i> Tiempo para cosecha</h5>
+              </div>
+              <div class="card-body text-center">
+                <p class="display-6 text-primary">{{ tiempoCosechaInvierno }} días</p>
+                
+              </div>
           </div>
         </div>
       </div>
-      <div class="col-xl-4 col-lg-4 col-md-6">
+
+<div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card border-warning h-100">
+          <div class="card-header bg-warning text-white">
+            <h5 class="mb-0"><i class="fas fa-weight-hanging me-2"></i> Presentación</h5>
+          </div>
+          <div class="card-body text-center">
+            <p class="display-6 text-warning">{{ presentacion }}</p>
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-globe me-2"></i> Mercado</h5>
+            </div>
+              <div class="card-body text-center">
+                <p class="display-6 text-warning">{{ mercado }}</p>
+                
+              </div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="card border-info h-100">
           <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Precio promedio</h5>
+            <h5 class="mb-0"><i class="fas fa-dollar-sign me-2"></i> Precio promedio</h5>
           </div>
           <div class="card-body text-center">
             {% if precio_promedio %}
@@ -141,6 +141,8 @@
           </div>
         </div>
       </div>
+      
+
     </div>
   </div>
 
